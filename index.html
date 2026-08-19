@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#08050a">
   <meta name="description" content="櫻隱命館：九尾引導的成人暗黑互動占卜。四卷各有完整判讀，走完才會看見第五扇門。">
-  <title>櫻隱命館 V54</title>
+  <title>櫻隱命館 V58</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="style_overrides_v1.css">
 </head>
@@ -21,14 +21,14 @@
 
     <header class="toolbar" aria-label="命館控制">
       <button id="brandBtn" class="brand-mark" type="button" aria-label="回到櫻隱命館封面">櫻隱</button>
-      <button id="menuBtn" class="menu-control" type="button" aria-expanded="false" aria-controls="toolbarActions" title="展開命館功能">選</button>
+      <button id="menuBtn" class="menu-control" type="button" aria-expanded="false" aria-controls="toolbarActions" aria-label="展開命館功能" title="展開命館功能">選</button>
       <div id="toolbarActions" class="toolbar-actions">
-        <button id="soundBtn" class="round-control" type="button" aria-pressed="true" title="開啟或關閉音樂">音</button>
-        <button id="sceneryBtn" class="round-control" type="button" aria-pressed="false" title="隱藏文字，欣賞目前場景">景</button>
-        <button id="galleryBtn" class="round-control" type="button" title="打開已見藏圖">藏</button>
-        <button id="reportBtn" class="round-control" type="button" title="在故事畫面展開已完成命牒" hidden>牒</button>
-        <button id="homeBtn" class="round-control" type="button" title="返回四道門">門</button>
-        <button id="resetBtn" class="round-control" type="button" title="清除命痕並重新開始">×</button>
+        <button id="soundBtn" class="round-control" type="button" aria-label="開啟或關閉音樂" aria-pressed="true" title="開啟或關閉音樂">音</button>
+        <button id="sceneryBtn" class="round-control" type="button" aria-label="隱藏文字欣賞場景" aria-pressed="false" title="隱藏文字，欣賞目前場景">景</button>
+        <button id="galleryBtn" class="round-control" type="button" aria-label="打開已見藏圖" title="打開已見藏圖">藏</button>
+        <button id="reportBtn" class="round-control" type="button" aria-label="展開已完成命牒" title="在故事畫面展開已完成命牒" hidden>牒</button>
+        <button id="homeBtn" class="round-control" type="button" aria-label="返回四道門" title="返回四道門">門</button>
+        <button id="resetBtn" class="round-control" type="button" aria-label="清除命痕並重新開始" title="清除命痕並重新開始">重</button>
       </div>
     </header>
 
@@ -47,7 +47,7 @@
 
     <section id="destinyReader" class="destiny-reader" aria-live="polite" hidden>
       <div class="destiny-reader__paper-wrap">
-        <article id="destinyPaper" class="destiny-paper">
+        <article id="destinyPaper" class="destiny-paper" tabindex="0" aria-label="命牒內容，可上下捲動閱讀">
           <header class="destiny-paper__head">
             <span id="destinyGlyph" class="destiny-paper__glyph">緣</span>
             <div>
@@ -121,8 +121,6 @@
       <button id="viewerNextBtn" class="viewer-nav viewer-nav--next" type="button" aria-label="下一張">›</button>
     </div>
   </dialog>
-
-
 
   <dialog id="confirmDialog" class="confirm-dialog">
     <form method="dialog">
