@@ -1,0 +1,46 @@
+/* 櫻隱 V58｜Scene Lock V1
+   只處理已確認的命牒閱讀性問題，不重整原 style.css。 */
+
+/* 命牒內容超出紙面時，必須讓玩家明確看得出可以捲動。 */
+.destiny-paper {
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(122, 43, 36, .58) rgba(93, 54, 38, .09) !important;
+}
+
+.destiny-paper::-webkit-scrollbar {
+  display: block !important;
+  width: 9px;
+}
+
+.destiny-paper::-webkit-scrollbar-track {
+  background: rgba(93, 54, 38, .08);
+  border-radius: 999px;
+}
+
+.destiny-paper::-webkit-scrollbar-thumb {
+  background: rgba(122, 43, 36, .46);
+  border: 2px solid rgba(239, 219, 183, .72);
+  border-radius: 999px;
+}
+
+.destiny-paper::-webkit-scrollbar-thumb:hover {
+  background: rgba(122, 43, 36, .68);
+}
+
+/* 有 overflow 時給一個非常輕的底部提示，不新增文字、不破壞命牒版型。 */
+.destiny-paper.scene-lock-v1-can-scroll {
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, .45),
+    inset 0 -18px 22px -20px rgba(73, 38, 27, .34),
+    inset 0 0 65px rgba(113, 62, 40, .09);
+}
+
+/* 手機仍保留觸控原生捲動。 */
+@media (max-width: 720px) {
+  .destiny-paper {
+    -webkit-overflow-scrolling: touch;
+  }
+}
