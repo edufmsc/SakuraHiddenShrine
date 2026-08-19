@@ -131,11 +131,25 @@
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // 真命卷｜已知焦點問題先修，不先重生主圖
+  // ---------------------------------------------------------------------------
+
+  // finale.choice：原桌機 focus=50% 58% 會把完整頭臉裁得過低。
+  // 先拉回 42%，與手機既有焦點一致；待實機再做最後微調。
+  {
+    const scene = STORY.finale?.scenes?.find(item => item?.id === 'finale.choice');
+    if (scene?.art) {
+      scene.art.desktopFocus = '50% 42%';
+      scene.art.mobileFocus = '50% 42%';
+    }
+  }
+
   // 將實作狀態掛在 STORY 上，方便 console / 後續檢查；不影響既有流程。
   STORY.sceneLockV1 = {
     ...(STORY.sceneLockV1 || {}),
     applied: true,
-    revision: '2026-08-19-b',
+    revision: '2026-08-19-c',
     changes: [
       'love.threshold.mobile-pair',
       'love.face.touch-mobile-fix',
@@ -145,7 +159,8 @@
       'life.shadow.mobile-pair',
       'life.room.mobile-pair',
       'forbidden.threshold.mobile-pair',
-      'forbidden.pattern.patterns-converge'
+      'forbidden.pattern.patterns-converge',
+      'finale.choice.desktop-focus'
     ]
   };
 })();
