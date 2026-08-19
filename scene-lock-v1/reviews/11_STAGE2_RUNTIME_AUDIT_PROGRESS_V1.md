@@ -82,6 +82,47 @@ Commit：`6d1bf8a2183ad4ac638dc7d2c8f02e152944c7c1`
 
 ---
 
+### 4. `love.ritual` / `finale.seal-test` hotspot 第一版框太寬
+
+已直接檢視正式 WebP：
+- `LOVE_RITUAL_01_seal_thread_desktop.webp`
+- `LOVE_RITUAL_01_seal_thread_mobile.webp`
+- `FINALE_SEAL_TEST_01_uncontrolled_seal_mobile.webp`
+
+第一版 hotspot 雖能操作，但範圍偏大，可能把祭壇、九尾手部或第五印外圍也算成有效點擊。
+
+**已修正**：
+- `love.ritual` Desktop 腕線框收斂為 `{ x:.13, y:.34, w:.30, h:.34 }`
+- `love.ritual` Mobile 腕線框收斂為 `{ x:.14, y:.65, w:.42, h:.24 }`
+- `finale.seal-test` Mobile 第五印框收斂為 `{ x:.27, y:.39, w:.54, h:.28 }`
+
+Commit：`637798dfc302af2f156d6f1436da2f0f8621c627`
+
+---
+
+### 5. Finale 三分支 reaction 在 Mobile 會被橫圖硬裁
+
+目前三個 reaction：
+- `final_complete_dawn.webp`
+- `final_scroll_desktop.webp`
+- `final_refuse_room.webp`
+
+都只有橫式資產。若直接以 Mobile `cover` 顯示，會切掉人物、手勢或劇情道具。
+
+**已修正成暫時安全模式**：
+- `interaction_ui_overrides_v1.js` 會偵測這三張 reaction 圖。
+- Mobile 時加上 `.v58-finale-landscape-reaction`。
+- `style_overrides_v1.css` 將該狀態改為 `object-fit: contain`，先完整保留橫圖內容，不再暴力裁切。
+- Story panel 同時限制在約 34dvh，避免文字吞掉整張圖。
+
+這只是 Mobile 安全顯示方案，**不是正式 9:16 reaction 圖，也不代表可 LOCKED**。
+
+Commits：
+- `8c82019de8cd4c346b92e9c0e32a4d0920fad643`
+- `f9aaabbb30ee01cceb5c9dd4199f2fd749930fbd`
+
+---
+
 ## 已確認的程式契約
 
 ### `frame()`
@@ -106,6 +147,26 @@ el.app.dataset.scene = sceneId;
 - 保存 `currentArtData`
 
 因此新圖的 Desktop / Mobile 分流架構本身成立。
+
+### `love.ritual` hotspot 對應按鈕
+目前圖上腕線 hotspot 搜尋文字 `先別剪`。
+`story.js` V54 已把 `unknotted` 選項改為：
+
+`先別剪。看它會不會自己鬆。`
+
+因此 hotspot 能確實找到真正的 choice button，不是死連結。
+
+### Finale 三選一 reaction 圖真的會出現
+`renderFinalChoice()` 選擇後會：
+
+```js
+fs.reactionArt = STORY.finale.endings[id].art;
+fs.phase = 'reaction';
+renderFinale();
+```
+
+而 `renderFinale()` 在 reaction 狀態會優先使用 `fs.reactionArt`。
+因此前一階段修正的三張 ending reaction 路徑確實會在選擇後顯示，之後才進入 final-ending / 總命牒。
 
 ---
 
@@ -137,12 +198,13 @@ el.app.dataset.scene = sceneId;
 - 必須取得真實瀏覽器畫面後才重開臉頰／唇前 hotspot
 
 ### C. Finale 三結局 Mobile 專圖
-目前三個 ending reaction 已改成 Repo 內存在的圖片，404 問題已排除；但目前這三張仍是同一張圖同時供 Desktop / Mobile 使用。
+目前已加上 contain 安全模式，避免橫圖被硬裁；但依《櫻隱》既定規則，正式 Mobile 仍應使用重新構圖的 9:16 專圖。
 
-依《櫻隱》既定規則，Mobile 理想上必須重新構圖，不應把 Desktop 橫圖直接硬裁。因此：
-- 功能路徑可測
-- Mobile 視覺尚不可鎖定
-- 不在本階段沒有專圖的情況下亂拿其他劇情圖替代
+因此：
+- 功能路徑可繼續測
+- Mobile 暫時不會嚴重裁圖
+- 視覺仍不可 LOCKED
+- 不拿其他劇情圖亂代替
 
 ### D. `love.silence / career.borrowed`
 仍需實際網站搭配文字觀看，才能判斷：
@@ -153,7 +215,7 @@ el.app.dataset.scene = sceneId;
 
 ## 第二階段接下來的判定順序
 
-1. 先取得可用的 Desktop / Mobile runtime evidence。
+1. 取得可用的 Desktop / Mobile runtime evidence。
 2. 實際驗 `love.face` 並校正臉頰／唇前位置。
 3. 實際驗 `love.ritual` / `finale.seal-test` hotspot 是否可點。
 4. 跑完整四卷與第五卷，檢查死路／錯圖／404／選項流程。
@@ -162,5 +224,11 @@ el.app.dataset.scene = sceneId;
 
 ## 本階段目前結論
 
-第二階段不是停滯；在 runtime audit 中已先修掉 3 個可能造成實際操作異常的程式問題。
-目前最主要的剩餘阻塞是取得真正的瀏覽器畫面證據，而不是再大幅改寫故事或重新整理網站架構。
+第二階段持續前進中，目前已修掉：
+- observer 自我循環
+- hotspot 無法點擊風險
+- fallback 文字重複觸發
+- 腕線／第五印 hotspot 過大
+- Finale 橫式 reaction 在 Mobile 被硬裁
+
+目前剩餘最大阻塞仍是「完整 runtime evidence + love.face 真實座標 + Finale 專用 Mobile reaction 圖」，不是網站核心架構或故事需要重做。
