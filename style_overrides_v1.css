@@ -1,5 +1,5 @@
 /* 櫻隱 V58｜Scene Lock V1
-   只處理已確認的命牒閱讀性問題，不重整原 style.css。 */
+   只處理已確認的命牒閱讀性與控制辨識問題，不重整原 style.css。 */
 
 /* 命牒內容超出紙面時，必須讓玩家明確看得出可以捲動。 */
 .destiny-paper {
@@ -8,6 +8,11 @@
   overscroll-behavior: contain;
   scrollbar-width: thin !important;
   scrollbar-color: rgba(122, 43, 36, .58) rgba(93, 54, 38, .09) !important;
+}
+
+.destiny-paper:focus-visible {
+  outline: 2px solid rgba(239, 219, 183, .82);
+  outline-offset: 4px;
 }
 
 .destiny-paper::-webkit-scrollbar {
@@ -38,9 +43,32 @@
     inset 0 0 65px rgba(113, 62, 40, .09);
 }
 
+/* 控制按鈕只做語意區分，不改整套視覺。
+   「牒」與「重來」在手機收合選單中不再看起來像同一種操作。 */
+#reportBtn {
+  border-color: rgba(239, 219, 183, .72);
+}
+
+#resetBtn {
+  border-color: rgba(220, 92, 92, .78);
+  background: rgba(58, 12, 18, .68);
+}
+
+#resetBtn:hover,
+#resetBtn:focus-visible {
+  background: rgba(118, 24, 34, .48);
+}
+
 /* 手機仍保留觸控原生捲動。 */
 @media (max-width: 720px) {
   .destiny-paper {
     -webkit-overflow-scrolling: touch;
+  }
+
+  #reportBtn,
+  #homeBtn,
+  #resetBtn {
+    font-size: 14px;
+    font-weight: 800;
   }
 }
