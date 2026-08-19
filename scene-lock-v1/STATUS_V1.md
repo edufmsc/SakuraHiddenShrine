@@ -32,10 +32,11 @@
 - ✅ `production/IMAGE_GENERATION_MASTER_V1.md`
 - ✅ `production/LOCK_CANDIDATES_MASTER_V1.md`
 
-### 高風險逐幕檢查
+### 高風險逐幕檢查／執行決策
 - ✅ `reviews/02_HIGH_RISK_SCENE_REVIEW_V1.md`
 - ✅ `reviews/03_HIGH_RISK_SCENE_REVIEW_V1.md`
 - ✅ `reviews/04_EXECUTION_DECISION_MASTER_V1.md`
+- ✅ `reviews/05_SIX_SCENE_RESOLUTION_V1.md`
 
 ### 實際程式落地
 - ✅ 新增 `story_overrides_v1.js`，以小範圍覆寫方式保護 V58 原始 `story.js`。
@@ -51,38 +52,66 @@
 - ✅ `life.room`：恢復獨立直式 `LIFE_recline_mobile_v44.webp`，不再用桌機橫圖硬裁。
 - ✅ `forbidden.threshold`：手機改 `FORBIDDEN_01_talisman_wall_fullbody_mobile.webp`。
 - ✅ `forbidden.pattern`：先接 `FORBIDDEN_VERIFY_01_patterns_converge_desktop/mobile`；由「確定生成」降為「現圖實機驗收，不足才生成」。
+- ✅ `forbidden.threat`：手機由 generic `forbidden_018.webp` 改為真正配對的 `FORBIDDEN_03_neck_shadow_threat_mobile.webp`。
 - ✅ `finale.choice`：桌機焦點由已知過低的 `50% 58%` 先調回 `50% 42%`，不先重生主圖。
 - ✅ 命牒：overflow 時顯示可見捲軸；逐字寫入自動跟到最新內容；玩家主動往上閱讀時不強制拉回底部。
 
-目前 `story_overrides_v1.js` 實作標記：`2026-08-19-c`。
+目前 `story_overrides_v1.js` 實作標記：`2026-08-19-d`。
 
-## 重要新發現
+## 本批六幕最新定案
 
-### `love.thread-room` 現圖其實是重複素材
+詳見：`reviews/05_SIX_SCENE_RESOLUTION_V1.md`
 
-GitHub 資產目錄顯示：
+### 直接升級為 🎨 GENERATE
+- `love.silence`：需要真正表現「紅線熄滅／斷掉 → 誰重新接回」的專用畫面，避免挪用 trial VERIFY 圖。
+- `love.ritual`：目前 desktop 只是 `FX_004.png` 純道具、mobile 又借其他緣卷圖；改為九尾＋紅線＋儀式道具專圖，並規劃三種 ritual 狀態 reactionArt。
+- `forbidden.ending`：現況重複 `FORBIDDEN_mirror_gaze_v44.webp / forbidden_020.webp`，與 `forbidden.mirror`／`forbidden.result` 形成視覺重複；改做真正「卸面後／門後無人／餘火或天將亮」收尾圖。
+
+### 先做像素／實機驗收，不足立刻 🎨 GENERATE
+- `career.turn`：現圖 `career_new_01.webp / career_015.webp` 必須真的看見「抬起棋盤＋盤底多手＋黑棋／玩家手」。任一缺失就生成。
+- `life.cost`：現圖 `life_003.webp / life_020.webp` 必須真的看見多個狀態燈／鏡片逐步變暗，形成「代價被記帳」。不足就生成。
+- `forbidden.threat`：已先修真正配對 mobile；實機仍要確認是否真的表現四個不同人物／多影重演，而不只是近頸威脅照。不足仍生成。
+
+## 重要資產重複發現
+
+### `love.thread-room`
 - `love_006.webp`
 - `LOVE_empty_threads.webp`
 
 兩個檔案使用相同 blob SHA：`06c716aaca5f8c2afb1beb0d81a4e103f8bd786a`。
 
-也就是 `love.thread-room` 桌機現圖實際上與 `love.face`「收回手後的空線」素材完全相同，不可能同時當作「鏡＋未寄信件＋單方紅線＋另一端空白」的專屬線室正式圖。
+因此 `love.thread-room` 不能再把現圖當成獨立「線室」正式圖：**🔄 SWAP 優先；找不到真正「鏡＋未寄信件＋單方紅線」素材就 🎨 GENERATE。**
 
-因此 `love.thread-room`：**🔄 SWAP 優先；若現有素材找不到完整對題圖，直接 🎨 GENERATE。**
+### 其他已知同圖不同檔名
 
-### `love.face` hotspot 根因
+禁卷：
+- `FORBIDDEN_mask.webp` = `FORBIDDEN_mask_reveal_v44.webp` = `forbidden_014.webp`
+- `FORBIDDEN_close_right.webp` = `FORBIDDEN_mirror_gaze_v44.webp`
+- `FORBIDDEN_soft_bait_v44.webp` = `FORBIDDEN_close_left.webp` = `forbidden_009.webp`
+- `FORBIDDEN_dark_gaze_v44.webp` = `FORBIDDEN_wet_gaze.webp` = `forbidden_013.webp`
+- `FORBIDDEN_seated_bait_v44.webp` = `FORBIDDEN_seated_right.webp`
+
+命卷：
+- `LIFE_shards.webp` = `LIFE_broken_mirror_v44.webp`
+- `LIFE_turn_back.webp` = `LIFE_wet_corridor_v44.webp`
+- `LIFE_recline_mobile.webp` = `life_019.webp`
+- `life_mirror_double_face.webp` = `LIFE_03_mirror_double_face_v39.webp`
+
+後續不得因檔名不同就把相同 blob 當成不同劇情素材。
+
+## `love.face` hotspot 根因
 
 `script.js` 已有依圖片實際 cover 尺寸換算的 `renderedImageMetrics()` / `layoutSceneHotspots()`，hotspot 會以 normalized 百分比乘上實際渲染圖片尺寸。
 
-所以目前「臉頰點到額頭／眼睛」的主因不是 RWD 縮放公式，而是 scene 本身硬寫的原始座標：
+所以目前「臉頰點到額頭／眼睛」主因不是 RWD 縮放公式，而是 scene 本身硬寫的原始座標：
 - cheek：`x=59, y=18, w=13, h=18`
 - lips：`x=59, y=34, w=13, h=9`
 
-在沒有真正看到實際圖片像素前，不猜新座標；實機畫面確認後再精準校正。
+沒有真正看到實際圖片像素前不猜新座標；實機畫面確認後再精準校正。
 
 ## 現在所在階段
 
-**規格、視覺審核、高風險定向、多批素材錯配修正，以及第一個命牒 UI 根因修正已完成。現在持續進行：「現有素材定案 → 真正缺圖生成 → trial / reaction / hotspot 精修 → 實機鎖頁」。**
+**規格、視覺審核、高風險定向、多批素材錯配修正，以及第一個命牒 UI 根因修正已完成。六幕素材決策也已定案，現在正式進入「真正缺圖生成規格 → trial / reaction / hotspot 精修 → 實機鎖頁」。**
 
 ### 每幕最終判定
 - `✅ USE`：現圖直接使用。
@@ -95,20 +124,27 @@ GitHub 資產目錄顯示：
 ## 確定高優先生成
 
 ### 緣
+- `love.silence`
 - `love.turn`
 - `love.result`
+- `love.ritual`
+- `love.thread-room`（若無真正對題現圖）
 
 ### 業
 - `career.borrowed`
 - `career.result`
+- `career.turn`（像素驗收不合格時）
 
 ### 命
 - `life.turn`
 - `life.result`
+- `life.cost`（像素驗收不合格時）
 
 ### 禁
 - `forbidden.turn`
 - `forbidden.result`
+- `forbidden.ending`
+- `forbidden.threat`（真正配對圖實機仍不合格時）
 
 ### 真命
 - `finale.gate`
@@ -116,27 +152,16 @@ GitHub 資產目錄顯示：
 - `finale.seal-test` 手機
 - `finale.ending`
 
-> `forbidden.pattern` 已暫時移出：現有 `FORBIDDEN_VERIFY_01_patterns_converge_desktop/mobile` 已接入，先驗實機。
-
 ## 已接現有替代圖、待實機驗收
 
 - ✅ `love.evidence` → `LOVE_VERIFY_01_next_time_proof_desktop/mobile`
 - ✅ `forbidden.pattern` → `FORBIDDEN_VERIFY_01_patterns_converge_desktop/mobile`
+- ✅ `forbidden.threat` mobile → `FORBIDDEN_03_neck_shadow_threat_mobile.webp`
 - ✅ `love.threshold` mobile → 專用配對圖
 - ✅ `life.threshold` mobile → 專用配對圖
 - ✅ `life.shadow` mobile → 專用配對圖
 - ✅ `life.room` mobile → 獨立直式圖
 - ✅ `forbidden.threshold` mobile → 專用配對圖
-
-## 下一批現有素材檢查
-
-- `love.thread-room` → 已知現圖重複，不再接受現況。
-- `love.silence`
-- `love.ritual`
-- `career.turn`
-- `life.cost`
-- `forbidden.threat`
-- `forbidden.ending`
 
 ## 不要先重生，先修程式／焦點
 
@@ -155,11 +180,11 @@ GitHub 資產目錄顯示：
 
 ## 下一個實作動作
 
-1. 繼續定案 `love.silence / love.ritual / career.turn / life.cost / forbidden.threat / forbidden.ending` 現有素材。
-2. `love.thread-room` 若沒有真正「鏡＋信件＋單方紅線」素材，直接列入生成。
-3. 對確定 `🎨 GENERATE` 的核心場景製作桌機／手機專用新圖。
+1. 依目前已定案的 `🎨 GENERATE` 清單，先製作真正缺圖場景的桌機／手機圖規格。
+2. 優先：`love.silence → love.ritual → forbidden.ending → love.turn → career.borrowed → life.turn → forbidden.turn → finale.gate → finale.confession`。
+3. 再處理四卷命牒與總命牒。
 4. 完成各卷 trial、reactionArt 與剩餘 per-image focus。
-5. 實際網站桌機＋手機逐幕驗收；`love.face` hotspot 也在這一步精準校正。
+5. 實際網站桌機＋手機逐幕驗收；`love.face` hotspot 在實機畫面精準校正。
 6. 全部通過才回寫 `🔒 LOCKED`。
 
 ## 驗收誠信規則
