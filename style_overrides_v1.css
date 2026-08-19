@@ -129,6 +129,26 @@
   }
 
   /*
+    Finale 三個 choice reaction 目前只有橫式資產。
+    在專用 9:16 圖完成前，手機改採 contain，避免 cover 將人物、手勢或重要道具硬裁掉。
+    這是暫時安全模式，不代表 Mobile reaction 已可 LOCKED。
+  */
+  .app.v58-finale-landscape-reaction .scene-image {
+    object-fit: contain !important;
+    object-position: 50% 36% !important;
+    transform: none !important;
+  }
+
+  .app.v58-finale-landscape-reaction .scene-picture {
+    background: #050306;
+  }
+
+  .app.v58-finale-landscape-reaction .story-panel {
+    height: min(34dvh, 300px) !important;
+    max-height: min(34dvh, 300px) !important;
+  }
+
+  /*
     2026-08-19 第一輪像素 QA：新生成圖本身已為 9:16 重新構圖。
     原版 44dvh 故事面板會吃掉過多重要畫面，因此只針對這批核心新圖收斂到 34dvh。
     文字不刪除，內容超出時仍使用原有 .panel-scroll。
