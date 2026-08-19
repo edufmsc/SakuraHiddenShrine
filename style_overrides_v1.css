@@ -59,6 +59,55 @@
   background: rgba(118, 24, 34, .48);
 }
 
+/* --------------------------------------------------------------------------
+   V58 第一階段互動熱區
+   -------------------------------------------------------------------------- */
+.v58-interaction-hotspot {
+  position: absolute;
+  z-index: 24;
+  appearance: none;
+  border: 1px solid rgba(255, 226, 211, .18);
+  border-radius: 999px;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 166, 126, .10), rgba(255, 120, 92, .02) 62%, transparent 76%);
+  box-shadow: 0 0 0 0 rgba(255, 146, 116, 0);
+  cursor: pointer;
+  opacity: .46;
+  transition: opacity .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
+  touch-action: manipulation;
+}
+
+.v58-interaction-hotspot::after {
+  content: '';
+  position: absolute;
+  inset: 12%;
+  border: 1px solid rgba(255, 225, 210, .18);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.v58-interaction-hotspot:hover,
+.v58-interaction-hotspot:focus-visible {
+  opacity: .92;
+  border-color: rgba(255, 218, 197, .64);
+  background: radial-gradient(circle at 50% 50%, rgba(255, 170, 130, .20), rgba(255, 112, 85, .05) 64%, transparent 78%);
+  box-shadow: 0 0 28px rgba(255, 120, 92, .17), inset 0 0 20px rgba(255, 222, 207, .08);
+  outline: none;
+}
+
+.v58-interaction-hotspot--seal {
+  border-radius: 46% 54% 48% 52%;
+}
+
+.v58-interaction-hotspot--thread {
+  border-radius: 48% 52% 44% 56%;
+}
+
+/* love.face 舊 hotspot 座標已確認偏到額頭／眼睛。
+   在實際圖像座標校準前先隱藏舊熱區，只保留下方三個文字選項，避免誤觸選錯答案。 */
+.app.v58-face-hotspot-fallback .scene-hotspot {
+  display: none !important;
+}
+
 /* 手機仍保留觸控原生捲動。 */
 @media (max-width: 720px) {
   .destiny-paper {
@@ -70,6 +119,12 @@
   #resetBtn {
     font-size: 14px;
     font-weight: 800;
+  }
+
+  .v58-interaction-hotspot {
+    min-width: 46px;
+    min-height: 46px;
+    opacity: .34;
   }
 
   /*
