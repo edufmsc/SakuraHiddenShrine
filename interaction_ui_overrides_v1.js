@@ -75,39 +75,33 @@
     layoutNode(button, box);
   };
 
-  const applyFaceFallbackCopy = () => {
+  const syncFaceChoiceMode = () => {
+    const active = app.dataset.scene === 'love.face';
+    app.classList.toggle('v58-face-choice-mode', active);
+    if (!active) return;
     const hint = choices.querySelector('.scene-interaction-hint');
-    if (!hint) return;
-    const fallbackText = '這一幕先用下方三個選項回答。臉頰／唇前的圖上觸點會在實機校準後再開啟。';
-    if (hint.textContent !== fallbackText) hint.textContent = fallbackText;
+    const text = '她把距離留給你。直接選你此刻真正會做的第一個動作。';
+    if (hint && hint.textContent !== text) hint.textContent = text;
   };
 
   const syncFinaleMobileProtection = () => {
-    const src = String(image.getAttribute('src') || '');
-    const isLandscapeReaction = [
+    const actualSrc = String(image.currentSrc || image.src || image.getAttribute('src') || '');
+    const needsContain = mobileQuery.matches && [
       'final_complete_dawn.webp',
-      'final_scroll_desktop.webp',
       'final_refuse_room.webp'
-    ].some(name => src.endsWith(name));
-    app.classList.toggle('v58-finale-landscape-reaction', mobileQuery.matches && isLandscapeReaction);
+    ].some(name => actualSrc.endsWith(name));
+    app.classList.toggle('v58-finale-landscape-reaction', needsContain);
   };
 
   const sync = () => {
     cancelAnimationFrame(syncRaf);
     syncRaf = requestAnimationFrame(() => {
       clearCustomHotspots();
+      syncFaceChoiceMode();
       syncFinaleMobileProtection();
       const scene = app.dataset.scene || '';
 
-      // love.face 的舊座標已確認會偏到額頭／眼睛。
-      // 在第二階段實機校準前，停用舊圖上熱區並改提示文案；三個文字選項完整保留。
-      const faceFallback = scene === 'love.face';
-      app.classList.toggle('v58-face-hotspot-fallback', faceFallback);
-      if (faceFallback) applyFaceFallbackCopy();
-
       if (scene === 'finale.seal-test') {
-        // 依正式 9:16 圖重新量過：第五印主圓約位於 x 27–81%、y 39–67%。
-        // 圖上只提供「停在印前」；「收回手」仍保留下方文字選項，避免互相重疊。
         addHotspot({
           id: 'finale-seal-hover',
           label: '把手停在第五印前',
@@ -119,8 +113,6 @@
       }
 
       if (scene === 'love.ritual') {
-        // 依 Desktop / Mobile 正式圖重新量過玩家腕線，縮小點擊區以免誤吃到祭壇或九尾手部。
-        // 剪線與門環沒有在兩張圖中同時穩定出現，因此仍不製造假的圖上按鈕。
         addHotspot({
           id: 'love-ritual-wrist',
           label: '讓紅線先鬆開',
@@ -133,8 +125,6 @@
     });
   };
 
-  // 只監看真正會改變互動狀態的來源。
-  // 不監看整棵 app 的 childList / style，避免本檔新增或定位 hotspot 時反過來觸發自己。
   const appObserver = new MutationObserver(sync);
   appObserver.observe(app, {
     attributes: true,
