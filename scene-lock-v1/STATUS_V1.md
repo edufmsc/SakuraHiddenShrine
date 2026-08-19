@@ -37,16 +37,38 @@
 - ✅ `reviews/03_HIGH_RISK_SCENE_REVIEW_V1.md`
 - ✅ `reviews/04_EXECUTION_DECISION_MASTER_V1.md`
 
-### 第一批實際程式落地
-- ✅ 新增 `story_overrides_v1.js`，避免大幅重寫 V58 原始 `story.js`。
-- ✅ `index.html` 載入順序改為 `story.js → story_overrides_v1.js → script.js`。
-- ✅ `love.threshold` 手機圖改用真正配對的 `LOVE_01_rain_bridge_invite_mobile.webp`。
-- ✅ `love.question` 四個選項改為自然繁中對話，移除教材式 hint。
-- ✅ `love.evidence` 改用既有 `LOVE_VERIFY_01_next_time_proof_desktop/mobile` 作為第一順位正式驗收圖。
+### 實際程式落地
+- ✅ 新增 `story_overrides_v1.js`，以小範圍覆寫方式保護 V58 原始 `story.js`。
+- ✅ `index.html` 載入順序為 `story.js → story_overrides_v1.js → script.js`。
+- ✅ `love.threshold`：手機改 `LOVE_01_rain_bridge_invite_mobile.webp`。
+- ✅ `love.face`：修正「碰臉頰」反應手機圖誤接 `LOVE_VERIFY_01_next_time_proof_mobile.webp` 的錯配；目前先用 `LOVE_03_close_face_bait_mobile.webp`，等待實機確認。
+- ✅ `love.question`：四個選項改為自然繁中對話，移除教材式 hint。
+- ✅ `love.evidence`：改用 `LOVE_VERIFY_01_next_time_proof_desktop/mobile`，等待實機驗收。
+- ✅ `life.threshold`：手機改真正配對的 `LIFE_01_water_reflection_mobile.webp`。
+- ✅ `life.shadow`：手機改真正配對的 `LIFE_02_paperdoor_shadow_mobile.webp`。
+- ✅ `life.room`：恢復原先獨立直式 `LIFE_recline_mobile_v44.webp`，不再用桌機橫圖硬裁。
+- ✅ `forbidden.threshold`：手機改真正配對的 `FORBIDDEN_01_talisman_wall_fullbody_mobile.webp`。
+- ✅ `forbidden.pattern`：先接現有 `FORBIDDEN_VERIFY_01_patterns_converge_desktop/mobile`；由「確定生成」降為「現圖實機驗收，不足才生成」。
+
+目前 `story_overrides_v1.js` 實作標記：`2026-08-19-b`。
+
+## 重要新發現
+
+### `love.thread-room` 現圖其實是重複素材
+
+GitHub 資產目錄顯示：
+- `love_006.webp`
+- `LOVE_empty_threads.webp`
+
+兩個檔案使用相同 blob SHA：`06c716aaca5f8c2afb1beb0d81a4e103f8bd786a`。
+
+也就是 `love.thread-room` 桌機現圖實際上與 `love.face`「收回手後的空線」素材完全相同，不可能同時當作「鏡＋未寄信件＋單方紅線＋另一端空白」的專屬線室正式圖。
+
+因此 `love.thread-room` 從「先保留重驗」提升為：**🔄 SWAP 優先；若現有素材找不到完整對題圖，直接 🎨 GENERATE。**
 
 ## 現在所在階段
 
-**規格、視覺審核、Production 與高風險場景定向已完成；第一批低風險可確定項目已開始真正寫入程式。現在持續進行「現有素材替換 → 專用生圖 → hotspot / trial / focus / 命牒修正 → 實機鎖頁」。**
+**規格、視覺審核、高風險定向與兩批低風險程式修正已完成。現在持續進行：「現有素材定案 → 真正缺圖生成 → hotspot / trial / focus / 命牒修正 → 實機鎖頁」。**
 
 ### 每幕最終判定
 - `✅ USE`：現圖直接使用。
@@ -71,7 +93,6 @@
 - `life.result`
 
 ### 禁
-- `forbidden.pattern`
 - `forbidden.turn`
 - `forbidden.result`
 
@@ -81,10 +102,21 @@
 - `finale.seal-test` 手機
 - `finale.ending`
 
-## 優先換現有圖
+> `forbidden.pattern` 暫時移出本區：現有 `FORBIDDEN_VERIFY_01_patterns_converge_desktop/mobile` 已接入，先做實機驗收。
 
-- ✅ `love.evidence` → 已先接 `LOVE_VERIFY_01_next_time_proof_desktop/mobile`，等待實機驗收。
-- `love.thread-room`
+## 已接現有替代圖、待實機驗收
+
+- ✅ `love.evidence` → `LOVE_VERIFY_01_next_time_proof_desktop/mobile`
+- ✅ `forbidden.pattern` → `FORBIDDEN_VERIFY_01_patterns_converge_desktop/mobile`
+- ✅ `love.threshold` mobile → 專用配對圖
+- ✅ `life.threshold` mobile → 專用配對圖
+- ✅ `life.shadow` mobile → 專用配對圖
+- ✅ `life.room` mobile → 獨立直式圖
+- ✅ `forbidden.threshold` mobile → 專用配對圖
+
+## 下一批現有素材檢查
+
+- `love.thread-room` → 已知現圖重複，不再接受現況。
 - `love.silence`
 - `love.ritual`
 - `career.turn`
@@ -94,8 +126,8 @@
 
 ## 不要先重生，先修程式／焦點
 
-- `love.face`
-- ✅ `love.question` 文案已先修，圖片保留。
+- `love.face` → 圖片錯配已先修；hotspot 尚未根治。
+- ✅ `love.question` → 文案已修，圖片保留。
 - `love.pulse-trial`
 - `career.stake-trial`
 - `career.ritual`
@@ -108,13 +140,12 @@
 
 ## 下一個實作動作
 
-依 `reviews/04_EXECUTION_DECISION_MASTER_V1.md` 持續執行：
-
-1. 繼續搜尋並定案所有 `🔄 SWAP` 場景的現有替代圖。
-2. 對確定 `🎨 GENERATE` 的核心場景製作桌機／手機專用新圖。
-3. 完成 hotspot、trial、reactionArt、命牒捲動與 per-image focus。
-4. 進入實際網站桌機＋手機逐幕驗收，通過才回寫 `🔒 LOCKED`。
+1. 繼續定案所有 `🔄 SWAP` 場景，避免能用現圖卻重複生圖。
+2. `love.thread-room` 若找不到真正「鏡＋信件＋單方紅線」素材，直接列入生圖。
+3. 對確定 `🎨 GENERATE` 的核心場景製作桌機／手機專用新圖。
+4. 修 `love.face` hotspot、各卷 trial、reactionArt、命牒捲動與 per-image focus。
+5. 實際網站桌機＋手機逐幕驗收，通過才回寫 `🔒 LOCKED`。
 
 ## 驗收誠信規則
 
-GitHub 連接器可核對檔案、故事映射、圖片路徑與 Markdown 預覽引用，但目前不能直接把 WebP 二進位以像素級視覺檢查方式提供給模型。因此在實際瀏覽器／使用者截圖驗收以前，不會把尚未真正看過裁切與細節的頁面誤標成 `🔒 LOCKED`。
+GitHub 連接器可核對檔案、故事映射、圖片路徑、檔案 SHA 與 Markdown 預覽引用，但目前不能把 WebP 二進位直接提供像素級視覺檢查。因此在實際瀏覽器／使用者截圖驗收以前，不會把尚未真正看過裁切與人物細節的頁面誤標成 `🔒 LOCKED`。
