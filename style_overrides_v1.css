@@ -35,7 +35,6 @@
   background: rgba(122, 43, 36, .68);
 }
 
-/* 有 overflow 時給一個非常輕的底部提示，不新增文字、不破壞命牒版型。 */
 .destiny-paper.scene-lock-v1-can-scroll {
   box-shadow:
     0 30px 80px rgba(0, 0, 0, .45),
@@ -43,8 +42,7 @@
     inset 0 0 65px rgba(113, 62, 40, .09);
 }
 
-/* 控制按鈕只做語意區分，不改整套視覺。
-   「牒」與「重來」在手機收合選單中不再看起來像同一種操作。 */
+/* 控制按鈕只做語意區分，不改整套視覺。 */
 #reportBtn {
   border-color: rgba(239, 219, 183, .72);
 }
@@ -60,7 +58,7 @@
 }
 
 /* --------------------------------------------------------------------------
-   V58 第一階段互動熱區
+   V58 圖上互動熱區
    -------------------------------------------------------------------------- */
 .v58-interaction-hotspot {
   position: absolute;
@@ -103,10 +101,14 @@
   border-radius: 48% 52% 44% 56%;
 }
 
-/* love.face 舊 hotspot 座標已確認偏到額頭／眼睛。
-   在實際圖像座標校準前先隱藏舊熱區，只保留下方三個文字選項，避免誤觸選錯答案。 */
-.app.v58-face-hotspot-fallback .scene-hotspot {
+/* love.face 正式採三個文字選擇。
+   舊圖上座標曾偏到額頭／眼睛，永久停用，避免誤觸選錯答案。 */
+.app.v58-face-choice-mode .scene-hotspot {
   display: none !important;
+}
+
+.app.v58-face-choice-mode .scene-interaction-hint {
+  opacity: .92;
 }
 
 /* 手機仍保留觸控原生捲動。 */
@@ -128,11 +130,8 @@
     opacity: .34;
   }
 
-  /*
-    Finale 三個 choice reaction 目前只有橫式資產。
-    在專用 9:16 圖完成前，手機改採 contain，避免 cover 將人物、手勢或重要道具硬裁掉。
-    這是暫時安全模式，不代表 Mobile reaction 已可 LOCKED。
-  */
+  /* complete / refuse 目前只有語意正確的橫式 reaction 圖。
+     手機採 contain 完整顯示，不用 cover 硬裁人物、手勢或重要道具。 */
   .app.v58-finale-landscape-reaction .scene-image {
     object-fit: contain !important;
     object-position: 50% 36% !important;
@@ -144,15 +143,12 @@
   }
 
   .app.v58-finale-landscape-reaction .story-panel {
-    height: min(34dvh, 300px) !important;
-    max-height: min(34dvh, 300px) !important;
+    height: min(32dvh, 286px) !important;
+    max-height: min(32dvh, 286px) !important;
   }
 
-  /*
-    2026-08-19 第一輪像素 QA：新生成圖本身已為 9:16 重新構圖。
-    原版 44dvh 故事面板會吃掉過多重要畫面，因此只針對這批核心新圖收斂到 34dvh。
-    文字不刪除，內容超出時仍使用原有 .panel-scroll。
-  */
+  /* 新生成的 9:16 核心圖，故事面板收斂到約 1/3 螢幕；
+     文字不刪除，超出內容沿用 .panel-scroll。 */
   .app[data-scene="love.silence"] .story-panel,
   .app[data-scene="love.turn"] .story-panel,
   .app[data-scene="love.ritual"] .story-panel,
@@ -167,6 +163,11 @@
     max-height: min(34dvh, 310px) !important;
   }
 
+  .app[data-scene="love.face"] .story-panel {
+    height: min(38dvh, 340px) !important;
+    max-height: min(38dvh, 340px) !important;
+  }
+
   .app[data-scene="love.silence"] .panel-scroll,
   .app[data-scene="love.turn"] .panel-scroll,
   .app[data-scene="love.ritual"] .panel-scroll,
@@ -176,7 +177,8 @@
   .app[data-scene="forbidden.ending"] .panel-scroll,
   .app[data-scene="finale.gate"] .panel-scroll,
   .app[data-scene="finale.confession"] .panel-scroll,
-  .app[data-scene="finale.seal-test"] .panel-scroll {
+  .app[data-scene="finale.seal-test"] .panel-scroll,
+  .app[data-scene="love.face"] .panel-scroll {
     overscroll-behavior: contain;
     scrollbar-width: thin;
   }
