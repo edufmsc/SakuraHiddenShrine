@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#08050a">
+  <meta name="description" content="櫻隱命館：九尾引導的成人暗黑互動占卜。四卷各有完整判讀，走完才會看見第五扇門。">
+  <title>櫻隱命館 V54</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-route="none" data-mode="cover">
+  <main id="app" class="app" aria-live="polite">
+    <picture class="scene-picture">
+      <source id="mobileSource" media="(max-width: 720px)" srcset="assets/images/active/00_home/OPENING_01_door_eyes_mobile_v47.webp">
+      <img id="sceneImage" class="scene-image" src="assets/images/active/00_home/OPENING_01_door_eyes_desktop_v47.webp" alt="雨夜命館門縫裡，九尾先看見來客">
+    </picture>
+    <div class="scene-shade" aria-hidden="true"></div>
+    <div id="sceneHotspots" class="scene-hotspots" aria-label="場景可互動區域"></div>
+    <div id="petals" class="petals" aria-hidden="true"></div>
+
+    <header class="toolbar" aria-label="命館控制">
+      <button id="brandBtn" class="brand-mark" type="button" aria-label="回到櫻隱命館封面">櫻隱</button>
+      <button id="menuBtn" class="menu-control" type="button" aria-expanded="false" aria-controls="toolbarActions" title="展開命館功能">選</button>
+      <div id="toolbarActions" class="toolbar-actions">
+        <button id="soundBtn" class="round-control" type="button" aria-pressed="true" title="開啟或關閉音樂">音</button>
+        <button id="sceneryBtn" class="round-control" type="button" aria-pressed="false" title="隱藏文字，欣賞目前場景">景</button>
+        <button id="galleryBtn" class="round-control" type="button" title="打開已見藏圖">藏</button>
+        <button id="reportBtn" class="round-control" type="button" title="在故事畫面展開已完成命牒" hidden>牒</button>
+        <button id="homeBtn" class="round-control" type="button" title="返回四道門">門</button>
+        <button id="resetBtn" class="round-control" type="button" title="清除命痕並重新開始">×</button>
+      </div>
+    </header>
+
+    <section id="storyPanel" class="story-panel safe-left">
+      <div class="panel-scroll">
+        <p id="kicker" class="kicker"></p>
+        <h1 id="sceneTitle" class="scene-title"></h1>
+        <div id="dialogue" class="dialogue" aria-live="polite"></div>
+        <div id="choices" class="choices"></div>
+        <button id="continueBtn" class="continue-button" type="button" hidden>讓她說下去 <span>→</span></button>
+      </div>
+    </section>
+    <section id="scrollOverlay" class="scroll-overlay" aria-live="polite" hidden>
+      <div id="scrollPaper" class="scroll-paper"></div>
+    </section>
+
+    <section id="destinyReader" class="destiny-reader" aria-live="polite" hidden>
+      <div class="destiny-reader__paper-wrap">
+        <article id="destinyPaper" class="destiny-paper">
+          <header class="destiny-paper__head">
+            <span id="destinyGlyph" class="destiny-paper__glyph">緣</span>
+            <div>
+              <small id="destinyEyebrow">九尾手書命牒</small>
+              <h2 id="destinyTitle">緣之卷</h2>
+            </div>
+          </header>
+          <div id="destinyInk" class="destiny-ink"></div>
+          <p id="destinyPrompt" class="destiny-prompt" hidden></p>
+          <div id="destinyControls" class="destiny-controls"></div>
+          <div class="destiny-paper__brush-mark" aria-hidden="true"></div>
+        </article>
+      </div>
+      <aside class="destiny-reader__scribe" aria-label="九尾正在寫下命牒">
+        <img id="destinyScribeImage" src="assets/images/active/07_shared/v52_scribe_right.webp" alt="九尾坐在案前提筆書寫命牒">
+        <div class="destiny-reader__scribe-shade" aria-hidden="true"></div>
+        <p id="destinyScribeCaption" class="destiny-reader__scribe-caption">她沒有催你。筆尖只停在下一句之前。</p>
+      </aside>
+    </section>
+
+    <section id="doorStage" class="door-stage" aria-label="四道命門" hidden>
+      <button class="door-hotspot door-hotspot--love" type="button" data-route-target="love" aria-label="進入緣之門">
+        <span class="door-sigil">緣</span><span class="door-name">緣之門</span>
+      </button>
+      <button class="door-hotspot door-hotspot--career" type="button" data-route-target="career" aria-label="進入業之門">
+        <span class="door-sigil">業</span><span class="door-name">業之門</span>
+      </button>
+      <button class="door-hotspot door-hotspot--life" type="button" data-route-target="life" aria-label="進入命之門">
+        <span class="door-sigil">命</span><span class="door-name">命之門</span>
+      </button>
+      <button class="door-hotspot door-hotspot--forbidden" type="button" data-route-target="forbidden" aria-label="進入禁之門">
+        <span class="door-sigil">禁</span><span class="door-name">禁之門</span>
+      </button>
+      <button id="finalDoorBtn" class="final-door" type="button" hidden>
+        <span>無字之門</span><small>四道命痕已經認出你</small>
+      </button>
+      <aside id="doorWhisper" class="door-whisper" aria-live="polite">
+        <span id="doorWhisperTitle">碰一扇門。</span>
+        <p id="doorWhisperText">九尾會在門後回答；也會留下只屬於這一卷的代價。</p>
+      </aside>
+    </section>
+
+    <button id="restoreTextBtn" class="restore-text" type="button" hidden>讓字回來</button>
+    <div id="saveToast" class="save-toast" role="status" aria-live="polite" hidden>命痕已留下</div>
+
+    <div id="loading" class="loading" hidden>
+      <span class="loading-seal">狐</span>
+      <p>命館正在換景……</p>
+    </div>
+  </main>
+
+  <dialog id="galleryDialog" class="gallery-dialog">
+    <div class="gallery-shell">
+      <header class="gallery-header">
+        <div>
+          <p class="dialog-eyebrow">顯影的是你親眼走過的幕；未見之景仍覆著鎖印</p>
+          <h2>命館藏景</h2>
+        </div>
+        <button id="galleryCloseBtn" class="round-control" type="button" aria-label="關閉藏景">×</button>
+      </header>
+      <p id="galleryEmpty" class="gallery-empty">往前走。她只收藏你親眼看過的幕。</p>
+      <div id="galleryGrid" class="gallery-grid"></div>
+    </div>
+    <div id="galleryViewer" class="gallery-viewer" hidden>
+      <button id="viewerCloseBtn" class="viewer-close" type="button">返回藏景</button>
+      <button id="viewerPrevBtn" class="viewer-nav viewer-nav--prev" type="button" aria-label="上一張">‹</button>
+      <figure>
+        <img id="viewerImage" alt="">
+        <figcaption id="viewerCaption"></figcaption>
+      </figure>
+      <button id="viewerNextBtn" class="viewer-nav viewer-nav--next" type="button" aria-label="下一張">›</button>
+    </div>
+  </dialog>
+
+
+
+  <dialog id="confirmDialog" class="confirm-dialog">
+    <form method="dialog">
+      <p class="dialog-eyebrow">命痕管理</p>
+      <h2>要讓命館忘記今晚嗎？</h2>
+      <p>名字、選擇、四卷判讀、藏景與秘密終幕都會從這台裝置清除。</p>
+      <div class="dialog-actions">
+        <button value="cancel" class="ghost-button">保留命痕</button>
+        <button value="confirm" class="danger-button">清除並重來</button>
+      </div>
+    </form>
+  </dialog>
+
+  <noscript>此互動命館需要啟用 JavaScript。</noscript>
+  <script src="story.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

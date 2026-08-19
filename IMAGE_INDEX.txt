@@ -1,0 +1,363 @@
+櫻隱命館 V58 圖片分類索引
+
+說明：
+- ACTIVE：正式程式使用或仍有正式程式引用的圖片。
+- LIBRARY：保留素材，目前不作為正式主流程圖片使用。
+- 與 ACTIVE 完全相同的 LIBRARY 重複檔已移除。
+
+【ACTIVE】
+總計：189 張
+
+[00_home] 11 張
+- birth_coin_desktop.webp
+- HOME_01_coin_pause_mobile.webp
+- HOME_03_fivearts_overview_mobile.webp
+- HUB_four_doors_desktop_v44.webp
+- HUB_four_doors_mobile_v44.webp
+- OPENING_01_door_eyes_desktop_v47.webp
+- OPENING_01_door_eyes_mobile_v47.webp
+- OPENING_02_pulse_alias_desktop_v47.webp
+- OPENING_02_pulse_alias_mobile_v47.webp
+- RITUAL_01_three_foxes_desktop.webp
+- RITUAL_01_three_foxes_mobile.webp
+
+[01_love] 40 張
+- love_003.webp
+- love_006.webp
+- love_009.webp
+- LOVE_01_rain_bridge_invite_mobile.webp
+- LOVE_01_rain_bridge_invite_v39.webp
+- love_011.webp
+- love_012.webp
+- love_015.webp
+- love_016.webp
+- love_017.webp
+- love_018.webp
+- love_019.webp
+- LOVE_02_mirror_thread_interaction_mobile.webp
+- LOVE_02_mirror_thread_interaction_v39.webp
+- love_020.webp
+- love_021.webp
+- love_022_wide_v39.webp
+- love_022.webp
+- love_024.webp
+- love_025.webp
+- LOVE_03_close_face_bait_mobile.webp
+- LOVE_04_player_hand_pulled_mobile.webp
+- LOVE_04_player_hand_pulled_v39.webp
+- LOVE_close_bait.png
+- LOVE_close_reach_v44.webp
+- love_destiny_scribe.webp
+- love_destiny_wide.webp
+- LOVE_empty_threads.webp
+- love_face_before.webp
+- love_face_touch.webp
+- love_last_proof.webp
+- LOVE_lips_hush_v44.webp
+- LOVE_lips_mobile.webp
+- love_lips_pause.webp
+- LOVE_VERIFY_01_next_time_proof_desktop.webp
+- LOVE_VERIFY_01_next_time_proof_mobile.webp
+- LOVE_VERIFY_02_fact_or_script_desktop.webp
+- LOVE_VERIFY_02_fact_or_script_mobile.webp
+- LOVE_VERIFY_03_release_or_hold_desktop.webp
+- LOVE_VERIFY_03_release_or_hold_mobile.webp
+
+[02_career] 35 張
+- career_001.webp
+- career_002.webp
+- career_003.webp
+- career_005.webp
+- career_007.webp
+- career_008.webp
+- career_009.webp
+- CAREER_01_fan_command_mobile.webp
+- career_012.webp
+- career_015.webp
+- career_016.webp
+- career_017.webp
+- career_019_wide_v39.webp
+- career_019.webp
+- CAREER_02_table_cards_choice_mobile.webp
+- CAREER_02_table_cards_choice_v39.webp
+- career_020_wide_v39.webp
+- career_020.webp
+- CAREER_03_rain_standing_pressure_mobile.webp
+- CAREER_03_rain_standing_pressure_v39.webp
+- career_borrowed_evidence.webp
+- CAREER_chess_command_v44.webp
+- CAREER_chess_oracle.webp
+- career_destiny_wide.webp
+- career_destiny.webp
+- career_new_01.webp
+- career_new_02.webp
+- career_stake_plan.webp
+- CAREER_VERIFY_01_achievement_proof_desktop.webp
+- CAREER_VERIFY_01_achievement_proof_mobile.webp
+- CAREER_VERIFY_02_ally_door_desktop.webp
+- CAREER_VERIFY_02_ally_door_mobile.webp
+- CAREER_VERIFY_03_negotiate_terms_desktop.webp
+- CAREER_VERIFY_03_negotiate_terms_mobile.webp
+- CAREER_wine_mobile.webp
+
+[03_life] 35 張
+- life_002.webp
+- life_003.webp
+- life_008.webp
+- life_009.webp
+- LIFE_01_water_reflection_mobile.webp
+- LIFE_01_water_reflection_v39.webp
+- life_013.webp
+- life_014.webp
+- life_016.webp
+- life_018.webp
+- life_019.webp
+- LIFE_02_paperdoor_shadow_mobile.webp
+- LIFE_02_paperdoor_shadow_v39.webp
+- life_020.webp
+- LIFE_03_mirror_double_face_mobile.webp
+- LIFE_03_mirror_double_face_v39.webp
+- LIFE_broken_mirror_v44.webp
+- life_cracked_mirror.webp
+- life_destiny_wide.webp
+- life_destiny.webp
+- life_mirror_double_face.webp
+- life_mirror_mismatch.webp
+- life_new_01.webp
+- life_new_02.webp
+- LIFE_recline_mobile_v44.webp
+- LIFE_recline_mobile.webp
+- LIFE_shards.webp
+- LIFE_turn_back.webp
+- LIFE_VERIFY_01_close_the_noise_desktop.webp
+- LIFE_VERIFY_01_close_the_noise_mobile.webp
+- LIFE_VERIFY_02_return_the_burden_desktop.webp
+- LIFE_VERIFY_02_return_the_burden_mobile.webp
+- LIFE_VERIFY_03_choose_yourself_desktop.webp
+- LIFE_VERIFY_03_choose_yourself_mobile.webp
+- LIFE_wet_corridor_v44.webp
+
+[04_forbidden] 39 張
+- forbidden_005.webp
+- forbidden_007.webp
+- forbidden_009.webp
+- FORBIDDEN_01_talisman_wall_fullbody_mobile.webp
+- FORBIDDEN_01_talisman_wall_fullbody_v39.webp
+- forbidden_012.webp
+- forbidden_013.webp
+- forbidden_014.webp
+- forbidden_016.webp
+- forbidden_018.webp
+- FORBIDDEN_02_player_wrist_bound_mobile.webp
+- forbidden_020.webp
+- forbidden_022.webp
+- forbidden_023.webp
+- FORBIDDEN_03_neck_shadow_threat_mobile.webp
+- FORBIDDEN_03_neck_shadow_threat_v39.webp
+- FORBIDDEN_close_left.webp
+- FORBIDDEN_close_right.webp
+- FORBIDDEN_dark_gaze_v44.webp
+- forbidden_destiny_wide.webp
+- forbidden_destiny.webp
+- forbidden_fox_mask.webp
+- FORBIDDEN_mask_reveal_v44.webp
+- forbidden_mask_verdict_wide.webp
+- FORBIDDEN_mask.webp
+- FORBIDDEN_mirror_gaze_v44.webp
+- forbidden_new_01.webp
+- forbidden_new_03.webp
+- forbidden_red_thread.webp
+- FORBIDDEN_seated_bait_v44.webp
+- FORBIDDEN_seated_right.webp
+- FORBIDDEN_soft_bait_v44.webp
+- FORBIDDEN_VERIFY_01_patterns_converge_desktop.webp
+- FORBIDDEN_VERIFY_01_patterns_converge_mobile.webp
+- FORBIDDEN_VERIFY_02_break_the_loop_desktop.webp
+- FORBIDDEN_VERIFY_02_break_the_loop_mobile.webp
+- FORBIDDEN_VERIFY_03_reality_threshold_desktop.webp
+- FORBIDDEN_VERIFY_03_reality_threshold_mobile.webp
+- FORBIDDEN_wet_gaze.webp
+
+[05_fifth] 12 張
+- ending_003.webp
+- ending_new_01.webp
+- final_complete_dawn.webp
+- final_empty_room.webp
+- final_refuse_room.webp
+- final_scroll_desktop.webp
+- FINAL_SCROLL_portrait.webp
+- final_seal_form.webp
+- final_seal_touch.webp
+- finale_destiny.webp
+- finale_four_relics.webp
+- finale_uncontrolled.webp
+
+[06_ending] 1 張
+- final_dawn.webp
+
+[07_shared] 10 張
+- ENDING_moon_recline_v44.webp
+- ENDING_recline.webp
+- shared_001.webp
+- shared_005.webp
+- shared_009.webp
+- SHARED_close_gaze_v44.webp
+- SHARED_close.webp
+- SHARED_fullbody_mobile.webp
+- SHARED_recline.webp
+- v52_scribe_right.webp
+
+[08_props] 6 張
+- FX_004.png
+- fx_006.webp
+- FX_empty_gate.png
+- FX_empty_mirror_hall.png
+- FX_empty_torii.png
+- SCROLL_GENERIC_mobile_v47.webp
+
+
+【LIBRARY】
+總計：119 張
+
+[00_home] 29 張
+- 00_HOME_ENTRY_PREVIEW.jpg
+- home_001.webp
+- home_002.webp
+- home_003.webp
+- home_004.webp
+- home_005.webp
+- home_006.webp
+- home_007.webp
+- home_008.webp
+- home_009.webp
+- HOME_01_coin_pause.png
+- home_010.webp
+- home_011.webp
+- home_012.webp
+- home_013.webp
+- home_014.webp
+- home_015.webp
+- home_016.webp
+- home_017.webp
+- home_018.webp
+- home_019.webp
+- HOME_02_redthread_start_mobile.png
+- HOME_02_redthread_start.png
+- home_020.webp
+- home_021.webp
+- HOME_03_fivearts_overview_mobile.png
+- HOME_03_fivearts_overview.png
+- HOME_04_fourdoors_entry_mobile.png.png
+- HOME_04_fourdoors_entry.png
+
+[01_love] 13 張
+- 01_LOVE_YUAN_PREVIEW.jpg
+- love_001.webp
+- love_002.webp
+- love_004.webp
+- love_005.webp
+- love_007.webp
+- love_010.webp
+- love_013.webp
+- love_014.webp
+- love_023.webp
+- love_new_01.webp
+- love_new_02.webp
+- LOVE_VERIFY_02_fact_or_script_desktop.png
+
+[02_career] 6 張
+- 02_CAREER_YE_PREVIEW.jpg
+- career_004.webp
+- career_006.webp
+- CAREER_01_fan_command.png
+- career_010.webp
+- career_014.webp
+
+[03_life] 11 張
+- 03_LIFE_MING_PREVIEW.jpg
+- life_001.webp
+- life_005.webp
+- life_006.webp
+- life_007.webp
+- life_010.webp
+- life_012.webp
+- life_017.webp
+- life_021.webp
+- LIFE_03_mirror_double_face_mobile.png.png
+- LIFE_VERIFY_02_return_the_burden_mobile.png
+
+[04_forbidden] 18 張
+- 04_FORBIDDEN_JIN_PREVIEW.jpg
+- forbidden_001.webp
+- forbidden_002.webp
+- forbidden_003.webp
+- forbidden_004.webp
+- forbidden_006.webp
+- forbidden_008.webp
+- forbidden_015.webp
+- forbidden_017.webp
+- forbidden_019.webp
+- FORBIDDEN_02_player_wrist_bound.png
+- forbidden_021.webp
+- forbidden_024.webp
+- FORBIDDEN_04_final_confrontation_mobile.png.png
+- FORBIDDEN_04_final_confrontation.png
+- forbidden_mask_verdict_original.webp
+- forbidden_new_02.webp
+- FORBIDDEN_VERIFY_01_patterns_converge_mobile.png
+
+[05_fifth_ending] 6 張
+- 05_ENDING_PREVIEW.jpg
+- ending_001.webp
+- ending_004.webp
+- ending_007.webp
+- ending_008.webp
+- ending_010.webp
+
+[06_shared_candidates] 7 張
+- 06_SHARED_CANDIDATES_PREVIEW.jpg
+- shared_002.webp
+- shared_003.webp
+- shared_006.webp
+- shared_007.webp
+- shared_008.webp
+- shared_new_02.webp
+
+[07_shared] 1 張
+- shared_new_01.webp
+
+[07_transition_props] 8 張
+- 07_TRANSITION_PROPS_PREVIEW.jpg
+- FX_005.png
+- FX_007.png
+- FX_008.png
+- FX_009.png
+- FX_010.png
+- SCRATCH_01_sealed_desktop.png
+- SCRATCH_02_revealed_desktop.png
+
+[08_reference_only] 1 張
+- 08_REFERENCE_ONLY_PREVIEW.jpg
+
+[09_candidates_817] 16 張
+- 085d0806-3f40-4872-81be-125bc4bdd636.png
+- 127e0d52-4f4d-43f1-a231-f117d9cd91bc.png
+- 33537fe2-80b1-4fd7-b0b7-5131becb98f1.png
+- 5198fd93-366a-49f7-b0b7-a64bf2ffacf8.png
+- a5208e4b-d484-4047-a600-c0d43198578d.png
+- c1e634bf-2c53-4781-a9a1-eeb9809e4d80.png
+- ChatGPT Image 2026#U5e748#U670817#U65e5 #U4e0b#U534808_05_22 (2).png
+- ChatGPT Image 2026#U5e748#U670817#U65e5 #U4e0b#U534808_05_23 (3).png
+- ChatGPT Image 2026#U5e748#U670817#U65e5 #U4e0b#U534808_05_24 (5).png
+- ChatGPT Image 2026#U5e748#U670817#U65e5 #U4e0b#U534808_05_25 (6).png
+- ChatGPT Image 2026#U5e748#U670817#U65e5 #U4e0b#U534808_05_25 (7).png
+- ChatGPT Image 2026#U5e748#U670817#U65e5 #U4e0b#U534808_05_26 (8).png
+- ChatGPT Image 2026#U5e748#U670817#U65e5 #U4e0b#U534808_24_41 (1).png
+- ChatGPT Image 2026#U5e748#U670817#U65e5 #U4e0b#U534808_47_23.png
+- ChatGPT Image 2026#U5e748#U670817#U65e5 #U4e0b#U534809_39_37.png
+- d0075c9d-4b81-4cf7-b4fd-cbabbe44f71f.png
+
+[11_mobile_candidates] 3 張
+- RITUAL_01_three_foxes_mobile.png.png
+- SCRATCH_01_sealed_mobile.png
+- SCRATCH_02_revealed_mobile.png
