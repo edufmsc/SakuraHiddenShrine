@@ -82,10 +82,21 @@
     if (hint.textContent !== fallbackText) hint.textContent = fallbackText;
   };
 
+  const syncFinaleMobileProtection = () => {
+    const src = String(image.getAttribute('src') || '');
+    const isLandscapeReaction = [
+      'final_complete_dawn.webp',
+      'final_scroll_desktop.webp',
+      'final_refuse_room.webp'
+    ].some(name => src.endsWith(name));
+    app.classList.toggle('v58-finale-landscape-reaction', mobileQuery.matches && isLandscapeReaction);
+  };
+
   const sync = () => {
     cancelAnimationFrame(syncRaf);
     syncRaf = requestAnimationFrame(() => {
       clearCustomHotspots();
+      syncFinaleMobileProtection();
       const scene = app.dataset.scene || '';
 
       // love.face 的舊座標已確認會偏到額頭／眼睛。
@@ -123,8 +134,7 @@
   };
 
   // 只監看真正會改變互動狀態的來源。
-  // 不監看整棵 app 的 childList / style，避免本檔新增或定位 hotspot 時反過來觸發自己，
-  // 形成 MutationObserver → sync → DOM/style mutation → MutationObserver 的無限回饋循環。
+  // 不監看整棵 app 的 childList / style，避免本檔新增或定位 hotspot 時反過來觸發自己。
   const appObserver = new MutationObserver(sync);
   appObserver.observe(app, {
     attributes: true,
