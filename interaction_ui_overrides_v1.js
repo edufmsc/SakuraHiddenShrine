@@ -75,19 +75,27 @@
     layoutNode(button, box);
   };
 
+  const applyFaceFallbackCopy = () => {
+    const hint = choices.querySelector('.scene-interaction-hint');
+    if (!hint) return;
+    hint.textContent = '這一幕先用下方三個選項回答。臉頰／唇前的圖上觸點會在實機校準後再開啟。';
+  };
+
   const sync = () => {
     cancelAnimationFrame(syncRaf);
     syncRaf = requestAnimationFrame(() => {
       clearCustomHotspots();
       const scene = app.dataset.scene || '';
 
-      // love.face 的舊座標尚未完成像素校正。保留三個文字選擇，先停用錯位觸點，
-      // 避免玩家明明碰臉卻觸發到另一個答案。
-      app.classList.toggle('v58-face-hotspot-fallback', scene === 'love.face');
+      // love.face 的舊座標已確認會偏到額頭／眼睛。
+      // 在第二階段實機校準前，停用舊圖上熱區並改提示文案；三個文字選項完整保留。
+      const faceFallback = scene === 'love.face';
+      app.classList.toggle('v58-face-hotspot-fallback', faceFallback);
+      if (faceFallback) applyFaceFallbackCopy();
 
       if (scene === 'finale.seal-test') {
-        // 新 9:16 圖實際第五印約落在原圖 x 22–84%、y 40–68%。
-        // Desktop 保留較大的中央安全框；第二個「收回手」仍由下方文字按鈕操作。
+        // 新 9:16 圖第五印位於畫面中央偏上至中段；圖上只提供「停在印前」。
+        // 「收回手」刻意保留為下方文字選項，避免一整張圖同時塞兩個互相重疊的熱區。
         addHotspot({
           id: 'finale-seal-hover',
           label: '把手停在第五印前',
