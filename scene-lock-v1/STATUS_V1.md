@@ -37,9 +37,16 @@
 - ✅ `reviews/03_HIGH_RISK_SCENE_REVIEW_V1.md`
 - ✅ `reviews/04_EXECUTION_DECISION_MASTER_V1.md`
 
+### 第一批實際程式落地
+- ✅ 新增 `story_overrides_v1.js`，避免大幅重寫 V58 原始 `story.js`。
+- ✅ `index.html` 載入順序改為 `story.js → story_overrides_v1.js → script.js`。
+- ✅ `love.threshold` 手機圖改用真正配對的 `LOVE_01_rain_bridge_invite_mobile.webp`。
+- ✅ `love.question` 四個選項改為自然繁中對話，移除教材式 hint。
+- ✅ `love.evidence` 改用既有 `LOVE_VERIFY_01_next_time_proof_desktop/mobile` 作為第一順位正式驗收圖。
+
 ## 現在所在階段
 
-**規格、視覺審核、Production 與高風險場景定向已完成。現在正式進入「素材替換／專用生圖／程式精準修正／實機鎖頁」。**
+**規格、視覺審核、Production 與高風險場景定向已完成；第一批低風險可確定項目已開始真正寫入程式。現在持續進行「現有素材替換 → 專用生圖 → hotspot / trial / focus / 命牒修正 → 實機鎖頁」。**
 
 ### 每幕最終判定
 - `✅ USE`：現圖直接使用。
@@ -76,7 +83,7 @@
 
 ## 優先換現有圖
 
-- `love.evidence` → 第一順位 `LOVE_VERIFY_01_next_time_proof_desktop/mobile`
+- ✅ `love.evidence` → 已先接 `LOVE_VERIFY_01_next_time_proof_desktop/mobile`，等待實機驗收。
 - `love.thread-room`
 - `love.silence`
 - `love.ritual`
@@ -88,7 +95,7 @@
 ## 不要先重生，先修程式／焦點
 
 - `love.face`
-- `love.question`
+- ✅ `love.question` 文案已先修，圖片保留。
 - `love.pulse-trial`
 - `career.stake-trial`
 - `career.ritual`
@@ -101,13 +108,12 @@
 
 ## 下一個實作動作
 
-依 `reviews/04_EXECUTION_DECISION_MASTER_V1.md` 執行：
+依 `reviews/04_EXECUTION_DECISION_MASTER_V1.md` 持續執行：
 
-1. 先修明確現圖錯配：`love.evidence`、`love.threshold` 手機。
-2. 搜尋並定案所有 `🔄 SWAP` 場景的現有替代圖。
-3. 對確定 `🎨 GENERATE` 的核心場景製作桌機／手機專用新圖。
-4. 完成 hotspot、trial、reactionArt、命牒捲動與 per-image focus。
-5. 進入實際網站桌機＋手機逐幕驗收，通過才回寫 `🔒 LOCKED`。
+1. 繼續搜尋並定案所有 `🔄 SWAP` 場景的現有替代圖。
+2. 對確定 `🎨 GENERATE` 的核心場景製作桌機／手機專用新圖。
+3. 完成 hotspot、trial、reactionArt、命牒捲動與 per-image focus。
+4. 進入實際網站桌機＋手機逐幕驗收，通過才回寫 `🔒 LOCKED`。
 
 ## 驗收誠信規則
 
