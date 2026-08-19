@@ -19,10 +19,40 @@
   const cloneArt = (base, patch = {}) => ({ ...(base || {}), ...patch });
 
   // ---------------------------------------------------------------------------
-  // 緣卷封線：三個選擇都必須先留在同一幕看見「立即反應」，
-  // 再進入 ending，而不是點完選項直接跳頁。
-  // 目前尚未有三張專用 reaction 圖，因此保留正式主圖，以不同焦點＋反應文字完成第一版互動；
-  // 不借用其他劇情圖片，避免語意錯配。
+  // 緣卷沉默：新正式圖沒有畫出玩家手，因此把敘事焦點明確放在「玩家沒有伸手，
+  // 遠端是否真的自行把關係接回現實」。不要求圖片硬演不存在的玩家手。
+  // ---------------------------------------------------------------------------
+  {
+    const scene = findRouteScene('love', 'love.silence');
+    if (scene) {
+      scene.title = '你沒有伸手。另一端會自己接回來嗎？';
+      scene.beats = [
+        { speaker: 'narrator', text: '紅線忽然熄滅。你沒有伸手去把它接回來；幾秒後，遠處那一端只亮回一小截。' },
+        { speaker: 'fox', text: '「先別把亮起叫成修復。我只看另一個人有沒有真的把關係往前接。」' }
+      ];
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // 業卷借名：正式圖偏策略證據桌，靠一句更直接的畫面描述把「成果仍在、署名被換」
+  // 釘死，避免玩家把它只看成一般棋局。
+  // ---------------------------------------------------------------------------
+  {
+    const scene = findRouteScene('career', 'career.borrowed');
+    if (scene) {
+      scene.title = '成果還是你的。署名卻換成了別人。';
+      scene.beats = [
+        { speaker: 'narrator', text: '棋盤、卷宗與成果牌一樣不少；你做過的那一格還亮著，最上面的名字卻不是你。' },
+        { speaker: 'player', text: '所以不是沒人看見？' },
+        { speaker: 'fox', text: '「看見，和把名字留給你，是兩回事。你每次把最後一句讓出去，別人就替你把位置坐滿。」' }
+      ];
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // 緣卷封線：三個選擇都必須先留在同一幕看見立即反應，再進入 ending。
+  // 目前沒有三張專用 reaction 圖，因此保留正式封線主圖，以不同焦點＋不同反應文字處理，
+  // 不借用其他劇情圖片造成語意錯配。
   // ---------------------------------------------------------------------------
   {
     const scene = findRouteScene('love', 'love.ritual');
@@ -55,8 +85,7 @@
 
   // ---------------------------------------------------------------------------
   // 真命卷第五印：由原本線性說明頁改成真正的行為試探。
-  // 玩家可以把手停在印前、或直接收手；兩個動作都會留下 behavior，
-  // 但都不會在這裡替九尾完成封印，真正的三路結局仍留在 finale.choice。
+  // 兩個動作都留下 behavior，但都不會提前替九尾完成第五印；真正三路結局仍在 finale.choice。
   // ---------------------------------------------------------------------------
   {
     const scene = findFinaleScene('finale.seal-test');
@@ -104,8 +133,10 @@
   }
 
   // ---------------------------------------------------------------------------
-  // finale.choice 三分支原設定引用不存在的 final_complete.webp / final_scroll_only.webp /
-  // final_refuse.webp。改成 Repo 內確實存在的正式資產，避免最後選擇出現 404 缺圖。
+  // finale.choice：三分支改成 Repo 內確實存在的資產。
+  // 「只留命牒」已有真正直式舊資產 FINAL_SCROLL_portrait，手機直接使用；
+  // complete / refuse 目前沒有語意正確的直式專圖，仍使用原分支圖，由 UI 層在手機完整 contain，
+  // 絕不拿不相干的直式劇情圖冒充另一個結局。
   // ---------------------------------------------------------------------------
   {
     const endings = STORY.finale.endings || {};
@@ -116,7 +147,7 @@
         side: 'left-top',
         mobileSide: 'bottom',
         desktopFocus: '54% 42%',
-        mobileFocus: '50% 38%',
+        mobileFocus: '50% 30%',
         galleryTitle: '第五印完成・門外初光',
         heroPresence: 'large'
       });
@@ -124,11 +155,11 @@
     if (endings['scroll-only']) {
       endings['scroll-only'].art = cloneArt(endings['scroll-only'].art, {
         desktop: 'assets/images/active/05_fifth/final_scroll_desktop.webp',
-        mobile: 'assets/images/active/05_fifth/final_scroll_desktop.webp',
+        mobile: 'assets/images/active/05_fifth/FINAL_SCROLL_portrait.webp',
         side: 'left-top',
         mobileSide: 'bottom',
         desktopFocus: '50% 50%',
-        mobileFocus: '50% 44%',
+        mobileFocus: '50% 33%',
         galleryTitle: '第五印只留命牒',
         heroPresence: 'large'
       });
@@ -140,7 +171,7 @@
         side: 'left-top',
         mobileSide: 'bottom',
         desktopFocus: '55% 48%',
-        mobileFocus: '50% 44%',
+        mobileFocus: '50% 30%',
         galleryTitle: '第五印停筆・抽回手',
         heroPresence: 'empty'
       });
@@ -149,11 +180,14 @@
 
   STORY.sceneLockV1 = {
     ...(STORY.sceneLockV1 || {}),
-    interactionRevision: '2026-08-19-a',
+    interactionRevision: '2026-08-19-b',
     interactionChanges: [
+      'love.silence.semantic-copy-lock',
+      'career.borrowed.semantic-copy-lock',
       'love.ritual.three-reaction-states',
       'finale.seal-test.behavior-choice',
-      'finale.choice.fix-missing-reaction-assets'
+      'finale.choice.fix-missing-reaction-assets',
+      'finale.choice.scroll-only-portrait-mobile'
     ]
   };
 })();
