@@ -19,7 +19,7 @@ on:
       - 'assets/images/**'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   browser-qa:
@@ -29,6 +29,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: review/v58-scene-lock
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -96,7 +97,6 @@ jobs:
               requestFailures: failed
             };
 
-            // Static interaction contract checks executed in the real browser runtime.
             result.contracts = await page.evaluate(() => {
               const story = window.SHRINE_STORY;
               const routeScene = (r, s) => story?.routes?.[r]?.scenes?.find(x => x.id === s);
@@ -157,6 +157,22 @@ jobs:
 
       - name: Run Desktop and Mobile QA
         run: node /tmp/stage2-qa.mjs
+
+      - name: Persist QA report
+        if: always()
+        run: |
+          if [ -f stage2-artifacts/report.md ] && [ -f stage2-artifacts/report.json ]; then
+            mkdir -p scene-lock-v1/runtime-qa
+            cp stage2-artifacts/report.md scene-lock-v1/runtime-qa/STAGE2_BROWSER_QA.md
+            cp stage2-artifacts/report.json scene-lock-v1/runtime-qa/STAGE2_BROWSER_QA.json
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add scene-lock-v1/runtime-qa/STAGE2_BROWSER_QA.md scene-lock-v1/runtime-qa/STAGE2_BROWSER_QA.json
+            if ! git diff --cached --quiet; then
+              git commit -m 'test: record stage2 browser QA'
+              git push origin HEAD:review/v58-scene-lock
+            fi
+          fi
 
       - name: Upload QA evidence
         if: always()
