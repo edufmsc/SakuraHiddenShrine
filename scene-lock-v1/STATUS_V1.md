@@ -1,9 +1,7 @@
 # 櫻隱 V58｜Scene Lock V1 進度追蹤
 
 > 基底：V58
->
 > 分支：`review/v58-scene-lock`
->
 > `main`：本階段不修改。
 
 ## 已完成
@@ -34,39 +32,24 @@
 - ✅ `production/IMAGE_GENERATION_MASTER_V1.md`
 - ✅ `production/LOCK_CANDIDATES_MASTER_V1.md`
 
+### 高風險逐幕檢查
+- ✅ `reviews/02_HIGH_RISK_SCENE_REVIEW_V1.md`
+- ✅ `reviews/03_HIGH_RISK_SCENE_REVIEW_V1.md`
+- ✅ `reviews/04_EXECUTION_DECISION_MASTER_V1.md`
+
 ## 現在所在階段
 
-**五卷 Production 規格已全部完成。現在正式進入「逐幕最終定圖＋第一批鎖頁」。**
+**規格、視覺審核、Production 與高風險場景定向已完成。現在正式進入「素材替換／專用生圖／程式精準修正／實機鎖頁」。**
 
-每幕最終判定：
-
+### 每幕最終判定
 - `✅ USE`：現圖直接使用。
 - `🟡 ADJUST`：現圖保留，修 focus／安全區／手機構圖／hotspot／文字。
 - `🔄 SWAP`：從 V58 現有 active/library 換圖。
 - `🎨 GENERATE`：現有素材沒有該故事動作，生成專用新圖。
 - `🔧 BUILD`：程式／互動需修正。
+- `🔒 LOCKED`：必須實際桌機＋手機＋互動驗收通過。
 
-只有「故事＋圖片＋桌機＋手機＋文字安全區＋互動」全部通過後，才可改成 `🔒 LOCKED`。
-
-## 第一批鎖頁候選
-
-依 `production/LOCK_CANDIDATES_MASTER_V1.md`：
-
-1. `love.wrist`
-2. `love.proximity`
-3. `career.name`
-4. `career.threshold`
-5. `life.double`
-6. `life.room`
-7. `forbidden.wrist`
-8. `forbidden.bait`
-9. `forbidden.last-proof`
-10. `finale.relics`
-11. `finale.withdrawal`
-
-## 最高優先生圖／專用圖
-
-依 `production/IMAGE_GENERATION_MASTER_V1.md`：
+## 確定高優先生成
 
 ### 緣
 - `love.turn`
@@ -91,14 +74,41 @@
 - `finale.seal-test` 手機
 - `finale.ending`
 
+## 優先換現有圖
+
+- `love.evidence` → 第一順位 `LOVE_VERIFY_01_next_time_proof_desktop/mobile`
+- `love.thread-room`
+- `love.silence`
+- `love.ritual`
+- `career.turn`
+- `life.cost`
+- `forbidden.threat`
+- `forbidden.ending`
+
+## 不要先重生，先修程式／焦點
+
+- `love.face`
+- `love.question`
+- `love.pulse-trial`
+- `career.stake-trial`
+- `career.ritual`
+- `life.mirror`
+- `life.body-trial`
+- `life.ritual`
+- `forbidden.mask`
+- `forbidden.heat-trial`
+- `finale.choice`
+
 ## 下一個實作動作
 
-不再建立新的規格層。接下來直接從第一批鎖頁候選開始，逐幕核對現圖、焦點、安全區、手機構圖與互動，通過的頁面才同步更新：
+依 `reviews/04_EXECUTION_DECISION_MASTER_V1.md` 執行：
 
-- 對應 `visual-audit/*.md`
-- 對應各卷 `*_SCENE_LOCK_V1.md`
-- `SCENE_LOCK_V58.md`
+1. 先修明確現圖錯配：`love.evidence`、`love.threshold` 手機。
+2. 搜尋並定案所有 `🔄 SWAP` 場景的現有替代圖。
+3. 對確定 `🎨 GENERATE` 的核心場景製作桌機／手機專用新圖。
+4. 完成 hotspot、trial、reactionArt、命牒捲動與 per-image focus。
+5. 進入實際網站桌機＋手機逐幕驗收，通過才回寫 `🔒 LOCKED`。
 
-高風險頁則依 `IMAGE_GENERATION_MASTER_V1.md` 先查現有素材，確認沒有合適圖後才生成。
+## 驗收誠信規則
 
-在整卷視覺與互動尚未鎖定以前，不修改 V58 正式故事程式。
+GitHub 連接器可核對檔案、故事映射、圖片路徑與 Markdown 預覽引用，但目前不能直接把 WebP 二進位以像素級視覺檢查方式提供給模型。因此在實際瀏覽器／使用者截圖驗收以前，不會把尚未真正看過裁切與細節的頁面誤標成 `🔒 LOCKED`。
