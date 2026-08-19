@@ -121,12 +121,19 @@
     });
   };
 
-  const observer = new MutationObserver(sync);
-  observer.observe(app, {
-    subtree: true,
-    childList: true,
+  // 只監看真正會改變互動狀態的來源。
+  // 不監看整棵 app 的 childList / style，避免本檔新增或定位 hotspot 時反過來觸發自己，
+  // 形成 MutationObserver → sync → DOM/style mutation → MutationObserver 的無限回饋循環。
+  const appObserver = new MutationObserver(sync);
+  appObserver.observe(app, {
     attributes: true,
-    attributeFilter: ['data-scene', 'data-mode', 'data-layout', 'src', 'srcset', 'style']
+    attributeFilter: ['data-scene', 'data-mode', 'data-layout', 'data-image-fit']
+  });
+
+  const choiceObserver = new MutationObserver(sync);
+  choiceObserver.observe(choices, {
+    subtree: true,
+    childList: true
   });
 
   image.addEventListener('load', sync);
