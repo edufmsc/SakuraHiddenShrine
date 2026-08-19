@@ -1,0 +1,168 @@
+name: Stage 2 Browser QA
+
+on:
+  push:
+    branches:
+      - review/v58-scene-lock
+    paths:
+      - '.github/workflows/stage2-browser-qa.yml'
+      - 'index.html'
+      - 'story.js'
+      - 'story_overrides_v1.js'
+      - 'pixel_overrides_v1.js'
+      - 'interaction_story_overrides_v1.js'
+      - 'interaction_ui_overrides_v1.js'
+      - 'script.js'
+      - 'style.css'
+      - 'style_overrides_v1.css'
+      - 'ui_overrides_v1.js'
+      - 'assets/images/**'
+
+permissions:
+  contents: read
+
+jobs:
+  browser-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: review/v58-scene-lock
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Playwright
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install --silent playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Create browser QA runner
+        run: |
+          cat > /tmp/stage2-qa.mjs <<'EOF'
+          import { chromium } from 'playwright';
+          import fs from 'node:fs';
+          import { spawn } from 'node:child_process';
+
+          const server = spawn('python3', ['-m', 'http.server', '4173', '--bind', '127.0.0.1'], { stdio: 'ignore' });
+          await new Promise(resolve => setTimeout(resolve, 1200));
+
+          const devices = [
+            { name: 'desktop', width: 1440, height: 900 },
+            { name: 'mobile', width: 390, height: 844 }
+          ];
+
+          const report = { generatedAt: new Date().toISOString(), runs: [] };
+          const browser = await chromium.launch({ headless: true });
+
+          async function inspect(name, width, height) {
+            const context = await browser.newContext({ viewport: { width, height } });
+            const page = await context.newPage();
+            const errors = [];
+            const failed = [];
+            page.on('console', msg => { if (msg.type() === 'error') errors.push(msg.text()); });
+            page.on('pageerror', err => errors.push(String(err)));
+            page.on('requestfailed', req => failed.push(`${req.method()} ${req.url()} :: ${req.failure()?.errorText || 'failed'}`));
+            const response = await page.goto('http://127.0.0.1:4173/index.html', { waitUntil: 'networkidle' });
+            const initial = await page.evaluate(() => ({
+              title: document.title,
+              scene: document.querySelector('#app')?.dataset.scene || '',
+              mode: document.querySelector('#app')?.dataset.mode || '',
+              image: document.querySelector('#sceneImage')?.getAttribute('src') || '',
+              imageNatural: [document.querySelector('#sceneImage')?.naturalWidth || 0, document.querySelector('#sceneImage')?.naturalHeight || 0],
+              viewport: [innerWidth, innerHeight],
+              bodyOverflowX: document.documentElement.scrollWidth > innerWidth,
+              panelRect: (() => { const r = document.querySelector('#storyPanel')?.getBoundingClientRect(); return r ? {x:r.x,y:r.y,w:r.width,h:r.height} : null; })(),
+              scripts: [...document.scripts].map(s => s.getAttribute('src')).filter(Boolean),
+              missingImages: [...document.images].filter(img => img.complete && !img.naturalWidth).map(img => img.getAttribute('src'))
+            }));
+            fs.mkdirSync('stage2-artifacts', { recursive: true });
+            await page.screenshot({ path: `stage2-artifacts/${name}-opening.png`, fullPage: true });
+
+            const sourceText = await page.locator('body').innerText();
+            const expectedScripts = ['story.js','story_overrides_v1.js','pixel_overrides_v1.js','interaction_story_overrides_v1.js','script.js','interaction_ui_overrides_v1.js','ui_overrides_v1.js'];
+            const scriptOrderOk = expectedScripts.every((src, i) => initial.scripts[i] === src);
+
+            const result = {
+              name,
+              status: response?.status() || 0,
+              ...initial,
+              scriptOrderOk,
+              hasOpeningCopy: sourceText.includes('櫻隱'),
+              consoleErrors: errors,
+              requestFailures: failed
+            };
+
+            // Static interaction contract checks executed in the real browser runtime.
+            result.contracts = await page.evaluate(() => {
+              const story = window.SHRINE_STORY;
+              const routeScene = (r, s) => story?.routes?.[r]?.scenes?.find(x => x.id === s);
+              const finaleScene = s => story?.finale?.scenes?.find(x => x.id === s);
+              const ritual = routeScene('love','love.ritual');
+              const seal = finaleScene('finale.seal-test');
+              return {
+                loveRitualReactionArts: ritual?.choices?.map(c => ({ id:c.id, hasReactionArt:Boolean(c.reactionArt) })) || [],
+                sealType: seal?.type || null,
+                sealChoiceIds: seal?.choices?.map(c => c.id) || [],
+                endingAssets: Object.fromEntries(Object.entries(story?.finale?.endings || {}).map(([k,v]) => [k, v.art?.desktop || ''])),
+                finalScroll: story?.totalScrollArt?.desktop || '',
+                finalScrollMobile: story?.totalScrollArt?.mobile || '',
+                interactionRevision: story?.sceneLockV1?.interactionRevision || '',
+                pixelRevision: story?.sceneLockV1?.pixelQaRevision || ''
+              };
+            });
+
+            await context.close();
+            return result;
+          }
+
+          for (const device of devices) report.runs.push(await inspect(device.name, device.width, device.height));
+          await browser.close();
+          server.kill('SIGTERM');
+
+          fs.writeFileSync('stage2-artifacts/report.json', JSON.stringify(report, null, 2));
+          const lines = ['# Stage 2 Browser QA', ''];
+          for (const run of report.runs) {
+            lines.push(`## ${run.name}`);
+            lines.push(`- HTTP: ${run.status}`);
+            lines.push(`- Viewport: ${run.viewport.join('×')}`);
+            lines.push(`- Opening image natural size: ${run.imageNatural.join('×')}`);
+            lines.push(`- Horizontal overflow: ${run.bodyOverflowX}`);
+            lines.push(`- Script order OK: ${run.scriptOrderOk}`);
+            lines.push(`- Missing images at opening: ${run.missingImages.length}`);
+            lines.push(`- Console errors: ${run.consoleErrors.length}`);
+            lines.push(`- Failed requests: ${run.requestFailures.length}`);
+            lines.push(`- Seal choices: ${run.contracts.sealChoiceIds.join(', ')}`);
+            lines.push(`- Interaction revision: ${run.contracts.interactionRevision}`);
+            lines.push(`- Pixel QA revision: ${run.contracts.pixelRevision}`);
+            lines.push('');
+          }
+          fs.writeFileSync('stage2-artifacts/report.md', lines.join('\n'));
+
+          const hardFailures = report.runs.flatMap(r => [
+            ...(r.status !== 200 ? [`${r.name}: HTTP ${r.status}`] : []),
+            ...(r.imageNatural[0] === 0 ? [`${r.name}: opening image failed`] : []),
+            ...(!r.scriptOrderOk ? [`${r.name}: script order mismatch`] : []),
+            ...r.consoleErrors.map(e => `${r.name}: console ${e}`),
+            ...r.requestFailures.filter(x => !x.includes('.ogg')).map(e => `${r.name}: request ${e}`)
+          ]);
+          if (hardFailures.length) {
+            console.error(hardFailures.join('\n'));
+            process.exitCode = 1;
+          }
+          EOF
+
+      - name: Run Desktop and Mobile QA
+        run: node /tmp/stage2-qa.mjs
+
+      - name: Upload QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage2-browser-qa
+          path: stage2-artifacts
+          if-no-files-found: error
+          retention-days: 14
