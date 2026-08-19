@@ -1,5 +1,5 @@
 /* 櫻隱 V58｜Scene Lock V1
-   只處理已確認的命牒閱讀性與控制辨識問題，不重整原 style.css。 */
+   只處理已確認的命牒閱讀性、控制辨識與像素驗收後的局部版面問題，不重整原 style.css。 */
 
 /* 命牒內容超出紙面時，必須讓玩家明確看得出可以捲動。 */
 .destiny-paper {
@@ -70,5 +70,38 @@
   #resetBtn {
     font-size: 14px;
     font-weight: 800;
+  }
+
+  /*
+    2026-08-19 第一輪像素 QA：新生成圖本身已為 9:16 重新構圖。
+    原版 44dvh 故事面板會吃掉過多重要畫面，因此只針對這批核心新圖收斂到 34dvh。
+    文字不刪除，內容超出時仍使用原有 .panel-scroll。
+  */
+  .app[data-scene="love.silence"] .story-panel,
+  .app[data-scene="love.turn"] .story-panel,
+  .app[data-scene="love.ritual"] .story-panel,
+  .app[data-scene="career.borrowed"] .story-panel,
+  .app[data-scene="life.turn"] .story-panel,
+  .app[data-scene="forbidden.turn"] .story-panel,
+  .app[data-scene="forbidden.ending"] .story-panel,
+  .app[data-scene="finale.gate"] .story-panel,
+  .app[data-scene="finale.confession"] .story-panel,
+  .app[data-scene="finale.seal-test"] .story-panel {
+    height: min(34dvh, 310px) !important;
+    max-height: min(34dvh, 310px) !important;
+  }
+
+  .app[data-scene="love.silence"] .panel-scroll,
+  .app[data-scene="love.turn"] .panel-scroll,
+  .app[data-scene="love.ritual"] .panel-scroll,
+  .app[data-scene="career.borrowed"] .panel-scroll,
+  .app[data-scene="life.turn"] .panel-scroll,
+  .app[data-scene="forbidden.turn"] .panel-scroll,
+  .app[data-scene="forbidden.ending"] .panel-scroll,
+  .app[data-scene="finale.gate"] .panel-scroll,
+  .app[data-scene="finale.confession"] .panel-scroll,
+  .app[data-scene="finale.seal-test"] .panel-scroll {
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
   }
 }
