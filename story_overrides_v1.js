@@ -131,6 +131,16 @@
     }
   }
 
+  // 07 forbidden.threat：桌機原本就用 03 neck-shadow，手機卻借了 generic forbidden_018。
+  // active 目錄有真正配對的直式版，因此直接修正，不需重生。
+  {
+    const scene = findScene('forbidden', 'forbidden.threat');
+    if (scene?.art) {
+      scene.art.mobile = 'assets/images/active/04_forbidden/FORBIDDEN_03_neck_shadow_threat_mobile.webp';
+      scene.art.mobileFocus = '50% 18%';
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // 真命卷｜已知焦點問題先修，不先重生主圖
   // ---------------------------------------------------------------------------
@@ -149,7 +159,7 @@
   STORY.sceneLockV1 = {
     ...(STORY.sceneLockV1 || {}),
     applied: true,
-    revision: '2026-08-19-c',
+    revision: '2026-08-19-d',
     changes: [
       'love.threshold.mobile-pair',
       'love.face.touch-mobile-fix',
@@ -160,6 +170,7 @@
       'life.room.mobile-pair',
       'forbidden.threshold.mobile-pair',
       'forbidden.pattern.patterns-converge',
+      'forbidden.threat.mobile-pair',
       'finale.choice.desktop-focus'
     ]
   };
