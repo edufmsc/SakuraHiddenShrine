@@ -39,18 +39,22 @@
 
 ### 實際程式落地
 - ✅ 新增 `story_overrides_v1.js`，以小範圍覆寫方式保護 V58 原始 `story.js`。
-- ✅ `index.html` 載入順序為 `story.js → story_overrides_v1.js → script.js`。
+- ✅ 新增 `style_overrides_v1.css`，只修已確認的命牒閱讀性，不重整原 `style.css`。
+- ✅ 新增 `ui_overrides_v1.js`，處理命牒逐字自動跟隨與玩家手動往上閱讀時暫停跟隨。
+- ✅ `index.html` 載入順序：`style.css → style_overrides_v1.css`；`story.js → story_overrides_v1.js → script.js → ui_overrides_v1.js`。
 - ✅ `love.threshold`：手機改 `LOVE_01_rain_bridge_invite_mobile.webp`。
-- ✅ `love.face`：修正「碰臉頰」反應手機圖誤接 `LOVE_VERIFY_01_next_time_proof_mobile.webp` 的錯配；目前先用 `LOVE_03_close_face_bait_mobile.webp`，等待實機確認。
+- ✅ `love.face`：修正「碰臉頰」反應手機圖誤接證據圖；目前先用 `LOVE_03_close_face_bait_mobile.webp`，等待實機確認。
 - ✅ `love.question`：四個選項改為自然繁中對話，移除教材式 hint。
 - ✅ `love.evidence`：改用 `LOVE_VERIFY_01_next_time_proof_desktop/mobile`，等待實機驗收。
-- ✅ `life.threshold`：手機改真正配對的 `LIFE_01_water_reflection_mobile.webp`。
-- ✅ `life.shadow`：手機改真正配對的 `LIFE_02_paperdoor_shadow_mobile.webp`。
-- ✅ `life.room`：恢復原先獨立直式 `LIFE_recline_mobile_v44.webp`，不再用桌機橫圖硬裁。
-- ✅ `forbidden.threshold`：手機改真正配對的 `FORBIDDEN_01_talisman_wall_fullbody_mobile.webp`。
-- ✅ `forbidden.pattern`：先接現有 `FORBIDDEN_VERIFY_01_patterns_converge_desktop/mobile`；由「確定生成」降為「現圖實機驗收，不足才生成」。
+- ✅ `life.threshold`：手機改 `LIFE_01_water_reflection_mobile.webp`。
+- ✅ `life.shadow`：手機改 `LIFE_02_paperdoor_shadow_mobile.webp`。
+- ✅ `life.room`：恢復獨立直式 `LIFE_recline_mobile_v44.webp`，不再用桌機橫圖硬裁。
+- ✅ `forbidden.threshold`：手機改 `FORBIDDEN_01_talisman_wall_fullbody_mobile.webp`。
+- ✅ `forbidden.pattern`：先接 `FORBIDDEN_VERIFY_01_patterns_converge_desktop/mobile`；由「確定生成」降為「現圖實機驗收，不足才生成」。
+- ✅ `finale.choice`：桌機焦點由已知過低的 `50% 58%` 先調回 `50% 42%`，不先重生主圖。
+- ✅ 命牒：overflow 時顯示可見捲軸；逐字寫入自動跟到最新內容；玩家主動往上閱讀時不強制拉回底部。
 
-目前 `story_overrides_v1.js` 實作標記：`2026-08-19-b`。
+目前 `story_overrides_v1.js` 實作標記：`2026-08-19-c`。
 
 ## 重要新發現
 
@@ -64,11 +68,21 @@ GitHub 資產目錄顯示：
 
 也就是 `love.thread-room` 桌機現圖實際上與 `love.face`「收回手後的空線」素材完全相同，不可能同時當作「鏡＋未寄信件＋單方紅線＋另一端空白」的專屬線室正式圖。
 
-因此 `love.thread-room` 從「先保留重驗」提升為：**🔄 SWAP 優先；若現有素材找不到完整對題圖，直接 🎨 GENERATE。**
+因此 `love.thread-room`：**🔄 SWAP 優先；若現有素材找不到完整對題圖，直接 🎨 GENERATE。**
+
+### `love.face` hotspot 根因
+
+`script.js` 已有依圖片實際 cover 尺寸換算的 `renderedImageMetrics()` / `layoutSceneHotspots()`，hotspot 會以 normalized 百分比乘上實際渲染圖片尺寸。
+
+所以目前「臉頰點到額頭／眼睛」的主因不是 RWD 縮放公式，而是 scene 本身硬寫的原始座標：
+- cheek：`x=59, y=18, w=13, h=18`
+- lips：`x=59, y=34, w=13, h=9`
+
+在沒有真正看到實際圖片像素前，不猜新座標；實機畫面確認後再精準校正。
 
 ## 現在所在階段
 
-**規格、視覺審核、高風險定向與兩批低風險程式修正已完成。現在持續進行：「現有素材定案 → 真正缺圖生成 → hotspot / trial / focus / 命牒修正 → 實機鎖頁」。**
+**規格、視覺審核、高風險定向、多批素材錯配修正，以及第一個命牒 UI 根因修正已完成。現在持續進行：「現有素材定案 → 真正缺圖生成 → trial / reaction / hotspot 精修 → 實機鎖頁」。**
 
 ### 每幕最終判定
 - `✅ USE`：現圖直接使用。
@@ -102,7 +116,7 @@ GitHub 資產目錄顯示：
 - `finale.seal-test` 手機
 - `finale.ending`
 
-> `forbidden.pattern` 暫時移出本區：現有 `FORBIDDEN_VERIFY_01_patterns_converge_desktop/mobile` 已接入，先做實機驗收。
+> `forbidden.pattern` 已暫時移出：現有 `FORBIDDEN_VERIFY_01_patterns_converge_desktop/mobile` 已接入，先驗實機。
 
 ## 已接現有替代圖、待實機驗收
 
@@ -126,7 +140,7 @@ GitHub 資產目錄顯示：
 
 ## 不要先重生，先修程式／焦點
 
-- `love.face` → 圖片錯配已先修；hotspot 尚未根治。
+- `love.face` → 圖片錯配已修；hotspot 等實際畫面校座標。
 - ✅ `love.question` → 文案已修，圖片保留。
 - `love.pulse-trial`
 - `career.stake-trial`
@@ -136,16 +150,18 @@ GitHub 資產目錄顯示：
 - `life.ritual`
 - `forbidden.mask`
 - `forbidden.heat-trial`
-- `finale.choice`
+- ✅ `finale.choice` → 第一輪 focus 已修，待實機微調與三分支 reaction。
+- ✅ destiny reader → 捲軸／自動跟隨第一輪已修，待實機驗證。
 
 ## 下一個實作動作
 
-1. 繼續定案所有 `🔄 SWAP` 場景，避免能用現圖卻重複生圖。
-2. `love.thread-room` 若找不到真正「鏡＋信件＋單方紅線」素材，直接列入生圖。
+1. 繼續定案 `love.silence / love.ritual / career.turn / life.cost / forbidden.threat / forbidden.ending` 現有素材。
+2. `love.thread-room` 若沒有真正「鏡＋信件＋單方紅線」素材，直接列入生成。
 3. 對確定 `🎨 GENERATE` 的核心場景製作桌機／手機專用新圖。
-4. 修 `love.face` hotspot、各卷 trial、reactionArt、命牒捲動與 per-image focus。
-5. 實際網站桌機＋手機逐幕驗收，通過才回寫 `🔒 LOCKED`。
+4. 完成各卷 trial、reactionArt 與剩餘 per-image focus。
+5. 實際網站桌機＋手機逐幕驗收；`love.face` hotspot 也在這一步精準校正。
+6. 全部通過才回寫 `🔒 LOCKED`。
 
 ## 驗收誠信規則
 
-GitHub 連接器可核對檔案、故事映射、圖片路徑、檔案 SHA 與 Markdown 預覽引用，但目前不能把 WebP 二進位直接提供像素級視覺檢查。因此在實際瀏覽器／使用者截圖驗收以前，不會把尚未真正看過裁切與人物細節的頁面誤標成 `🔒 LOCKED`。
+GitHub 連接器可核對檔案、故事映射、圖片路徑、檔案 SHA 與程式結構，但目前不能把 WebP 二進位直接提供像素級視覺檢查。因此在實際瀏覽器／使用者截圖驗收以前，不會把尚未真正看過裁切與人物細節的頁面誤標成 `🔒 LOCKED`。
