@@ -78,7 +78,8 @@
   const applyFaceFallbackCopy = () => {
     const hint = choices.querySelector('.scene-interaction-hint');
     if (!hint) return;
-    hint.textContent = '這一幕先用下方三個選項回答。臉頰／唇前的圖上觸點會在實機校準後再開啟。';
+    const fallbackText = '這一幕先用下方三個選項回答。臉頰／唇前的圖上觸點會在實機校準後再開啟。';
+    if (hint.textContent !== fallbackText) hint.textContent = fallbackText;
   };
 
   const sync = () => {
