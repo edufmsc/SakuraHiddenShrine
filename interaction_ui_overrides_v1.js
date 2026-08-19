@@ -95,28 +95,28 @@
       if (faceFallback) applyFaceFallbackCopy();
 
       if (scene === 'finale.seal-test') {
-        // 新 9:16 圖第五印位於畫面中央偏上至中段；圖上只提供「停在印前」。
-        // 「收回手」刻意保留為下方文字選項，避免一整張圖同時塞兩個互相重疊的熱區。
+        // 依正式 9:16 圖重新量過：第五印主圓約位於 x 27–81%、y 39–67%。
+        // 圖上只提供「停在印前」；「收回手」仍保留下方文字選項，避免互相重疊。
         addHotspot({
           id: 'finale-seal-hover',
           label: '把手停在第五印前',
           choiceText: '把手停在第五印前',
           tone: 'seal',
           desktop: { x: .31, y: .34, w: .43, h: .34 },
-          mobile: { x: .22, y: .40, w: .62, h: .28 }
+          mobile: { x: .27, y: .39, w: .54, h: .28 }
         });
       }
 
       if (scene === 'love.ritual') {
-        // 正式圖裡唯一能穩定對應選項的劇情物件是玩家腕線。
-        // 剪線與門環沒有在 Desktop/Mobile 兩張圖中同時穩定出現，因此不製造假 hotspot。
+        // 依 Desktop / Mobile 正式圖重新量過玩家腕線，縮小點擊區以免誤吃到祭壇或九尾手部。
+        // 剪線與門環沒有在兩張圖中同時穩定出現，因此仍不製造假的圖上按鈕。
         addHotspot({
           id: 'love-ritual-wrist',
           label: '讓紅線先鬆開',
           choiceText: '先別剪',
           tone: 'thread',
-          desktop: { x: .17, y: .33, w: .27, h: .34 },
-          mobile: { x: .08, y: .64, w: .48, h: .28 }
+          desktop: { x: .13, y: .34, w: .30, h: .34 },
+          mobile: { x: .14, y: .65, w: .42, h: .24 }
         });
       }
     });
