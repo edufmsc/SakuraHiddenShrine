@@ -84,6 +84,11 @@
     padding-bottom: 18px !important;
   }
 
+  /* 固定在底部的命牒操作列上方保留空間，最後一行不會被按鈕蓋住。 */
+  .destiny-ink {
+    padding-bottom: 76px !important;
+  }
+
   /* 禁之卷・近火：桌機恢復 2×2 四格，不再被 whisper 的通用單欄規則吃掉。 */
   .app[data-scene="forbidden.bait"] .choices {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
