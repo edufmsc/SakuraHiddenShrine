@@ -7,6 +7,7 @@
   const paper = document.getElementById('destinyPaper');
   const ink = document.getElementById('destinyInk');
   const reader = document.getElementById('destinyReader');
+  const controls = document.getElementById('destinyControls');
 
   if (paper && ink && reader) {
     let autoFollow = true;
@@ -30,14 +31,12 @@
       });
     };
 
-    // 玩家若主動往上讀舊內容，就暫停自動跟隨；回到底部後自動恢復。
     paper.addEventListener('scroll', () => {
       updateScrollableState();
       if (programmatic) return;
       autoFollow = distanceFromBottom() <= 80;
     }, { passive: true });
 
-    // 每次新命牒開啟時，重新啟用自動跟隨。
     const readerObserver = new MutationObserver(() => {
       if (!reader.hidden) {
         autoFollow = true;
@@ -47,7 +46,6 @@
     });
     readerObserver.observe(reader, { attributes: true, attributeFilter: ['hidden', 'class'] });
 
-    // 逐字寫入改變內容高度時，只要玩家沒有刻意往上讀，就跟著最新一行。
     const inkObserver = new MutationObserver(followLatestInk);
     inkObserver.observe(ink, {
       childList: true,
@@ -60,7 +58,27 @@
   }
 
   // ---------------------------------------------------------------------------
-  // 手機功能選單：補齊關閉方式與語意，不改原本版型
+  // 最終命牒：黎明不是隱藏彩蛋，而是正式終幕。
+  // 將原本「走向黎明」改成更清楚的「走向黎明・櫻隱終幕」。
+  // ---------------------------------------------------------------------------
+  if (controls) {
+    const syncFinalControl = () => {
+      [...controls.querySelectorAll('button')].forEach(button => {
+        if (button.textContent.trim() === '走向黎明') {
+          button.textContent = '走向黎明・櫻隱終幕';
+          button.classList.add('v58-dawn-ending-control');
+          button.setAttribute('aria-label', '走向黎明，進入櫻隱終幕');
+          button.title = '進入真正結局：天亮了・櫻隱終';
+        }
+      });
+    };
+    const controlObserver = new MutationObserver(syncFinalControl);
+    controlObserver.observe(controls, { childList: true, subtree: true });
+    syncFinalControl();
+  }
+
+  // ---------------------------------------------------------------------------
+  // 手機功能選單
   // ---------------------------------------------------------------------------
   const app = document.getElementById('app');
   const menu = document.getElementById('menuBtn');
@@ -81,24 +99,20 @@
       if (restoreFocus) menu.focus({ preventScroll: true });
     };
 
-    // script.js 負責原本的按鈕開關；這裡只同步文字狀態。
     menu.addEventListener('click', () => requestAnimationFrame(syncMenuLabel));
 
-    // 點選單外側即收合，手機單手操作更直覺。
     document.addEventListener('pointerdown', event => {
       if (!app.classList.contains('menu-open')) return;
       if (menu.contains(event.target) || toolbarActions.contains(event.target)) return;
       closeMenu();
     }, { passive: true });
 
-    // 鍵盤／外接鍵盤可用 Esc 關閉並回到「選」。
     document.addEventListener('keydown', event => {
       if (event.key !== 'Escape' || !app.classList.contains('menu-open')) return;
       event.preventDefault();
       closeMenu({ restoreFocus: true });
     });
 
-    // 從手機切回桌機寬度時，避免殘留 menu-open 狀態。
     const mobileQuery = window.matchMedia('(max-width: 720px)');
     const handleViewportChange = event => {
       if (!event.matches) closeMenu();
