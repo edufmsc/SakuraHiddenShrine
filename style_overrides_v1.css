@@ -98,6 +98,11 @@
   background: linear-gradient(180deg, rgba(239,225,190,0), rgba(239,225,190,.95) 24%, rgba(239,225,190,.99));
 }
 
+/* 第五卷封卷後已改為自動進入黎明，不顯示多餘的「走向黎明／重看」操作列。 */
+.destiny-controls.v58-auto-ending {
+  display: none !important;
+}
+
 /* 桌機：短命牒依內容自然收高，不再硬撐 78vh 留一大片空白；
    內容真的太長時才由紙張本身捲動。 */
 @media (min-width: 721px) {
@@ -167,7 +172,7 @@
     inset 0 0 65px rgba(113, 62, 40, .09);
 }
 
-/* 保留相容：舊版若仍出現黎明按鈕，視覺保持主按鈕；新版已改自動進終幕。 */
+/* 保留相容：若舊狀態短暫顯示黎明按鈕，仍維持主按鈕辨識。 */
 .v58-dawn-ending-control {
   grid-column: 1 / -1;
   min-height: 52px;
@@ -269,6 +274,10 @@
     padding-bottom: 4px;
     background: transparent !important;
     box-shadow: none;
+  }
+
+  .destiny-controls.v58-auto-ending {
+    display: none !important;
   }
 
   .destiny-ink-line.is-final p {
