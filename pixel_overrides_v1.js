@@ -10,7 +10,7 @@
     if (scene?.art) Object.assign(scene.art, patch);
   };
 
-  // Pixel QA：只調整實際看過畫面後確定的文字安全區與焦點。
+  // Pixel QA：只調整實際人工驗收後確認的文字安全區與焦點。
   patchArt(findScene('love', 'love.silence'), {
     side: 'left-top',
     desktopFocus: '60% 49%',
@@ -29,16 +29,16 @@
     mobileFocus: '50% 30%'
   });
 
-  // 最終人工驗收：此幕人物與桌面證據集中在左側，文字移到右上。
   patchArt(findScene('love', 'love.evidence'), {
     side: 'right-top',
     desktopFocus: '50% 49%',
     mobileFocus: '50% 28%'
   });
 
+  // 業卷借名：人物與棋盤主事件在左／中央，文字固定右上。
   patchArt(findScene('career', 'career.borrowed'), {
-    side: 'left-top',
-    desktopFocus: '54% 49%',
+    side: 'right-top',
+    desktopFocus: '52% 49%',
     mobileFocus: '50% 30%'
   });
 
@@ -66,15 +66,13 @@
     mobileFocus: '50% 29%'
   });
 
-  // 最終人工驗收：天亮以前的主角在左側，右下保留大面積乾淨景深。
+  // 天亮以前：人物在左，正式文字固定右下。
   patchArt(findFinaleScene('finale.choice'), {
     side: 'right-bottom',
     desktopFocus: '48% 52%',
     mobileFocus: '50% 31%'
   });
 
-  // 新總命牒源圖的空白紙面與舊圖位置完全不同。
-  // 座標來自實際像素檢查，避免最後文字寫到九尾或背景上。
   const finalScrollBox = {
     scrollBoxDesktop: { x: .15, y: .31, w: .30, h: .38, rotate: 0 },
     scrollBoxMobile: { x: .13, y: .42, w: .30, h: .30, rotate: 0 }
@@ -86,13 +84,13 @@
   STORY.sceneLockV1 = {
     ...(STORY.sceneLockV1 || {}),
     pixelQaApplied: true,
-    pixelQaRevision: '2026-08-20-a',
+    pixelQaRevision: '2026-08-20-b',
     pixelQaChanges: [
       'love.silence.safe-left-top',
       'love.turn.safe-left-top',
       'love.ritual.safe-left-top',
       'love.evidence.safe-right-top',
-      'career.borrowed.safe-left-top',
+      'career.borrowed.safe-right-top',
       'life.turn.safe-right-bottom',
       'forbidden.ending.safe-left-top',
       'finale.gate.safe-right-bottom',
