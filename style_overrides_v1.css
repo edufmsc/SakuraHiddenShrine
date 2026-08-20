@@ -70,6 +70,27 @@
     inset 0 0 65px rgba(113, 62, 40, .09);
 }
 
+/* 真結不是次要功能：黎明入口跨滿整列，和「重看第五卷」清楚分層。 */
+.v58-dawn-ending-control {
+  grid-column: 1 / -1;
+  min-height: 52px;
+  margin-top: 10px;
+  border: 1px solid rgba(142, 48, 54, .82) !important;
+  background: linear-gradient(180deg, rgba(156, 53, 60, .22), rgba(88, 27, 34, .10)) !important;
+  box-shadow: 0 9px 24px rgba(84, 22, 28, .14), inset 0 0 18px rgba(255, 235, 216, .08);
+  color: #7a282e !important;
+  font-weight: 900 !important;
+  letter-spacing: .08em;
+}
+
+.v58-dawn-ending-control:hover,
+.v58-dawn-ending-control:focus-visible {
+  background: linear-gradient(180deg, rgba(164, 56, 63, .31), rgba(96, 29, 37, .15)) !important;
+  border-color: rgba(122, 38, 45, .96) !important;
+  outline: 2px solid rgba(145, 55, 60, .18);
+  outline-offset: 2px;
+}
+
 /* 控制按鈕只做語意區分，不改整套視覺。 */
 #reportBtn {
   border-color: rgba(239, 219, 183, .72);
@@ -150,6 +171,12 @@
   #resetBtn {
     font-size: 14px;
     font-weight: 800;
+  }
+
+  .v58-dawn-ending-control {
+    min-height: 50px;
+    margin-top: 8px;
+    font-size: 15px !important;
   }
 
   .v58-interaction-hotspot {
