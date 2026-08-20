@@ -10,6 +10,34 @@
   scrollbar-color: rgba(122, 43, 36, .58) rgba(93, 54, 38, .09) !important;
 }
 
+/* 驗收修正：單行內容不可因固定高度／動畫容器而切掉第二行。 */
+.destiny-ink-line {
+  overflow: visible !important;
+}
+
+.destiny-ink-line p {
+  overflow-wrap: anywhere;
+}
+
+/* 桌機命牒以閱讀優先：紙張可維持畫面高度，但內文區本身一定能完整滾動。 */
+@media (min-width: 721px) {
+  .destiny-reader__paper-wrap {
+    min-height: 0;
+  }
+
+  .destiny-paper,
+  .destiny-reader--love .destiny-paper,
+  .destiny-reader--total .destiny-paper {
+    min-height: 0 !important;
+    height: min(78dvh, 720px);
+    max-height: calc(100dvh - 108px) !important;
+  }
+
+  .destiny-ink {
+    min-height: 0;
+  }
+}
+
 .destiny-paper:focus-visible {
   outline: 2px solid rgba(239, 219, 183, .82);
   outline-offset: 4px;
