@@ -18,10 +18,7 @@
 
   const cloneArt = (base, patch = {}) => ({ ...(base || {}), ...patch });
 
-  // ---------------------------------------------------------------------------
-  // 緣卷沉默：新正式圖沒有畫出玩家手，因此把敘事焦點明確放在「玩家沒有伸手，
-  // 遠端是否真的自行把關係接回現實」。不要求圖片硬演不存在的玩家手。
-  // ---------------------------------------------------------------------------
+  // 緣卷沉默：把畫面語意固定在「玩家沒有伸手，另一端是否自行接回」。
   {
     const scene = findRouteScene('love', 'love.silence');
     if (scene) {
@@ -33,10 +30,7 @@
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // 業卷借名：正式圖偏策略證據桌，靠一句更直接的畫面描述把「成果仍在、署名被換」
-  // 釘死，避免玩家把它只看成一般棋局。
-  // ---------------------------------------------------------------------------
+  // 業卷借名：把「成果仍在、署名被換」講清楚。
   {
     const scene = findRouteScene('career', 'career.borrowed');
     if (scene) {
@@ -49,44 +43,39 @@
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // 緣卷封線：三個選擇都必須先留在同一幕看見立即反應，再進入 ending。
-  // 目前沒有三張專用 reaction 圖，因此保留正式封線主圖，以不同焦點＋不同反應文字處理，
-  // 不借用其他劇情圖片造成語意錯配。
-  // ---------------------------------------------------------------------------
+  // 第五卷反證：不再直接重用前面命卷的鏡室背景。
+  // 使用第五卷自己的「四痕上桌」視覺，讓玩家一眼知道已進入真命卷反證階段。
   {
-    const scene = findRouteScene('love', 'love.ritual');
-    if (scene?.art && Array.isArray(scene.choices)) {
-      const variants = {
-        unknotted: {
-          galleryTitle: '封線反應・未結腕線',
-          desktopFocus: '60% 54%',
-          mobileFocus: '50% 38%'
-        },
-        'mirror-cut': {
-          galleryTitle: '封線反應・鏡前斷餘',
-          desktopFocus: '54% 49%',
-          mobileFocus: '50% 34%'
-        },
-        'door-knot': {
-          galleryTitle: '封線反應・門環留線',
-          desktopFocus: '62% 49%',
-          mobileFocus: '50% 32%'
-        }
-      };
-
-      Object.entries(variants).forEach(([choiceId, artPatch]) => {
-        const item = findChoice(scene, choiceId);
-        if (!item) return;
-        item.reactionArt = cloneArt(scene.art, artPatch);
+    const scene = findFinaleScene('finale.cross');
+    if (scene?.art) {
+      Object.assign(scene.art, {
+        desktop: 'assets/images/active/05_fifth/finale_four_relics.webp',
+        mobile: 'assets/images/active/05_fifth/finale_four_relics.webp',
+        desktopFocus: '52% 48%',
+        mobileFocus: '52% 34%',
+        galleryTitle: '第五卷・四痕反證',
+        heroPresence: 'medium'
       });
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // 真命卷第五印：由原本線性說明頁改成真正的行為試探。
-  // 兩個動作都留下 behavior，但都不會提前替九尾完成第五印；真正三路結局仍在 finale.choice。
-  // ---------------------------------------------------------------------------
+  // 緣卷封線：三個選擇都先留在同一幕看立即反應。
+  {
+    const scene = findRouteScene('love', 'love.ritual');
+    if (scene?.art && Array.isArray(scene.choices)) {
+      const variants = {
+        unknotted: { galleryTitle: '封線反應・未結腕線', desktopFocus: '60% 54%', mobileFocus: '50% 38%' },
+        'mirror-cut': { galleryTitle: '封線反應・鏡前斷餘', desktopFocus: '54% 49%', mobileFocus: '50% 34%' },
+        'door-knot': { galleryTitle: '封線反應・門環留線', desktopFocus: '62% 49%', mobileFocus: '50% 32%' }
+      };
+      Object.entries(variants).forEach(([choiceId, artPatch]) => {
+        const item = findChoice(scene, choiceId);
+        if (item) item.reactionArt = cloneArt(scene.art, artPatch);
+      });
+    }
+  }
+
+  // 真命卷第五印：真正兩選一行為試探。
   {
     const scene = findFinaleScene('finale.seal-test');
     if (scene?.art) {
@@ -107,11 +96,7 @@
             { speaker: 'fox', text: '「很好。想靠近，和替我完成，是兩件事。」' }
           ],
           effects: { behavior: { restraint: 2, agency: 1 } },
-          reactionArt: cloneArt(scene.art, {
-            galleryTitle: '第五印・停在光外',
-            desktopFocus: '56% 34%',
-            mobileFocus: '50% 34%'
-          })
+          reactionArt: cloneArt(scene.art, { galleryTitle: '第五印・停在光外', desktopFocus: '56% 34%', mobileFocus: '50% 34%' })
         },
         {
           id: 'withdraw-seal',
@@ -122,68 +107,48 @@
             { speaker: 'fox', text: '「這才像你自己的手。」' }
           ],
           effects: { behavior: { agency: 2, restraint: 1 } },
-          reactionArt: cloneArt(scene.art, {
-            galleryTitle: '第五印・收回自己的手',
-            desktopFocus: '57% 31%',
-            mobileFocus: '50% 31%'
-          })
+          reactionArt: cloneArt(scene.art, { galleryTitle: '第五印・收回自己的手', desktopFocus: '57% 31%', mobileFocus: '50% 31%' })
         }
       ];
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // finale.choice：三分支改成 Repo 內確實存在的資產。
-  // 「只留命牒」已有真正直式舊資產 FINAL_SCROLL_portrait，手機直接使用；
-  // complete / refuse 目前沒有語意正確的直式專圖，仍使用原分支圖，由 UI 層在手機完整 contain，
-  // 絕不拿不相干的直式劇情圖冒充另一個結局。
-  // ---------------------------------------------------------------------------
+  // Finale 三分支使用 Repo 內確實存在的資產。
   {
     const endings = STORY.finale.endings || {};
     if (endings.complete) {
       endings.complete.art = cloneArt(endings.complete.art, {
         desktop: 'assets/images/active/05_fifth/final_complete_dawn.webp',
         mobile: 'assets/images/active/05_fifth/final_complete_dawn.webp',
-        side: 'left-top',
-        mobileSide: 'bottom',
-        desktopFocus: '54% 42%',
-        mobileFocus: '50% 30%',
-        galleryTitle: '第五印完成・門外初光',
-        heroPresence: 'large'
+        side: 'left-top', mobileSide: 'bottom', desktopFocus: '54% 42%', mobileFocus: '50% 30%',
+        galleryTitle: '第五印完成・門外初光', heroPresence: 'large'
       });
     }
     if (endings['scroll-only']) {
       endings['scroll-only'].art = cloneArt(endings['scroll-only'].art, {
         desktop: 'assets/images/active/05_fifth/final_scroll_desktop.webp',
         mobile: 'assets/images/active/05_fifth/FINAL_SCROLL_portrait.webp',
-        side: 'left-top',
-        mobileSide: 'bottom',
-        desktopFocus: '50% 50%',
-        mobileFocus: '50% 33%',
-        galleryTitle: '第五印只留命牒',
-        heroPresence: 'large'
+        side: 'left-top', mobileSide: 'bottom', desktopFocus: '50% 50%', mobileFocus: '50% 33%',
+        galleryTitle: '第五印只留命牒', heroPresence: 'large'
       });
     }
     if (endings.refuse) {
       endings.refuse.art = cloneArt(endings.refuse.art, {
         desktop: 'assets/images/active/05_fifth/final_refuse_room.webp',
         mobile: 'assets/images/active/05_fifth/final_refuse_room.webp',
-        side: 'left-top',
-        mobileSide: 'bottom',
-        desktopFocus: '55% 48%',
-        mobileFocus: '50% 30%',
-        galleryTitle: '第五印停筆・抽回手',
-        heroPresence: 'empty'
+        side: 'left-top', mobileSide: 'bottom', desktopFocus: '55% 48%', mobileFocus: '50% 30%',
+        galleryTitle: '第五印停筆・抽回手', heroPresence: 'empty'
       });
     }
   }
 
   STORY.sceneLockV1 = {
     ...(STORY.sceneLockV1 || {}),
-    interactionRevision: '2026-08-19-b',
+    interactionRevision: '2026-08-20-a',
     interactionChanges: [
       'love.silence.semantic-copy-lock',
       'career.borrowed.semantic-copy-lock',
+      'finale.cross.fifth-volume-art',
       'love.ritual.three-reaction-states',
       'finale.seal-test.behavior-choice',
       'finale.choice.fix-missing-reaction-assets',
