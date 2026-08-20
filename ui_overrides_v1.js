@@ -60,14 +60,9 @@
   }
 
   // ---------------------------------------------------------------------------
-  // 生辰年份相容修正：核心舊版曾把年份鎖成「18～90歲」。
-  // 正式規則只有「必須成年」，不應有最高年齡。
-  //
-  // 為了不重寫整個主流程，本層只在玩家輸入超過舊 90 歲限制時做相容橋接：
-  // 1. 畫面保留玩家真正輸入的年份。
-  // 2. 舊核心暫時用同閏年型態的成年年份完成三枚銅錢流程。
-  // 3. 三枚完成後，以真正生日重算 fortuneSeed 並回寫存檔，再進下一幕。
-  // 一般 18～90 歲玩家完全不受影響。
+  // 生辰年份相容修正：舊核心把年份鎖成 18～90 歲；正式規則只有「必須成年」。
+  // 超過 90 歲時，畫面保留真實年份，舊核心暫用同閏年型態的成年年份跑完銅錢流程；
+  // 完成後再用真實生日重算 fortuneSeed 並重新載入下一幕。
   // ---------------------------------------------------------------------------
   const birthCompat = {
     realYear: null,
@@ -108,8 +103,18 @@
     return min;
   };
 
+  const restoreBirthCache = () => {
+    if (birthCompat.realYear) return;
+    const cached = Number(sessionStorage.getItem('sakura-v58-real-birth-year'));
+    if (!Number.isInteger(cached)) return;
+    birthCompat.realYear = cached;
+    birthCompat.surrogateYear = chooseSurrogateYear(cached);
+  };
+
   const patchBirthVisual = () => {
+    restoreBirthCache();
     if (!birthCompat.realYear) return;
+
     const yearCoin = document.querySelector('.birth-coin[data-coin="year"] small');
     if (yearCoin && birthCompat.surrogateYear && yearCoin.textContent.trim() === String(birthCompat.surrogateYear)) {
       yearCoin.textContent = String(birthCompat.realYear);
@@ -124,8 +129,6 @@
     });
   };
 
-  // Capture phase runs before script.js form listener. Only intervene when the year is older
-  // than the legacy 90-year ceiling; otherwise the original flow handles everything.
   document.addEventListener('submit', event => {
     const form = event.target.closest?.('.birth-ritual');
     if (!form || form.classList.contains('birth-ritual--complete')) return;
@@ -139,7 +142,7 @@
     if (activeCoin === 'year') {
       const nowYear = new Date().getFullYear();
       const latestAdultYear = nowYear - 18;
-      if (raw > latestAdultYear) return; // native handler will show the underage error.
+      if (raw > latestAdultYear) return;
 
       const oldLegacyMin = nowYear - 90;
       if (raw < oldLegacyMin) {
@@ -153,14 +156,7 @@
       return;
     }
 
-    if (!birthCompat.realYear) {
-      const cached = Number(sessionStorage.getItem('sakura-v58-real-birth-year'));
-      if (Number.isInteger(cached)) {
-        birthCompat.realYear = cached;
-        birthCompat.surrogateYear = chooseSurrogateYear(cached);
-      }
-    }
-
+    restoreBirthCache();
     if (activeCoin === 'month') birthCompat.month = raw;
     if (activeCoin === 'day') {
       birthCompat.day = raw;
@@ -169,9 +165,9 @@
   }, true);
 
   const finalizeOldBirth = () => {
-    if (!birthCompat.pendingFinalize || !birthCompat.realYear || !birthCompat.month || !birthCompat.day) return;
+    if (!birthCompat.pendingFinalize || !birthCompat.realYear || !birthCompat.month || !birthCompat.day) return false;
     const saved = getSavedState();
-    if (!saved?.profile) return;
+    if (!saved?.profile) return false;
 
     const y = birthCompat.realYear;
     const m = birthCompat.month;
@@ -181,25 +177,27 @@
     const today = new Date();
     let age = today.getFullYear() - y;
     if (today.getMonth() + 1 < m || (today.getMonth() + 1 === m && today.getDate() < d)) age -= 1;
-    if (!valid || age < 18) return;
+    if (!valid || age < 18) return false;
 
     saved.profile.fortuneSeed = hash(`${saved.profile.alias || ''}|${y}-${m}-${d}`);
     localStorage.setItem(SAVE_KEY, JSON.stringify(saved));
     birthCompat.pendingFinalize = false;
     sessionStorage.removeItem('sakura-v58-real-birth-year');
+    return true;
   };
 
-  // After the native completion button saves and advances, rewrite the seed with the real
-  // old birth year and reload once so the private in-memory state matches localStorage exactly.
+  // Capture the completion click while the birth-complete DOM still exists.
+  // The core handler then advances/saves; our zero-delay task rewrites the exact real-year seed
+  // and reloads so the in-memory state also matches the corrected localStorage.
   document.addEventListener('click', event => {
-    if (!birthCompat.realYear) return;
+    restoreBirthCache();
+    if (!birthCompat.realYear || !birthCompat.pendingFinalize) return;
     const button = event.target.closest?.('.choice-button--story-lead');
     if (!button || !document.querySelector('.birth-ritual--complete')) return;
     setTimeout(() => {
-      finalizeOldBirth();
-      if (!birthCompat.pendingFinalize) location.reload();
+      if (finalizeOldBirth()) location.reload();
     }, 0);
-  });
+  }, true);
 
   const birthObserver = new MutationObserver(() => {
     const yearInput = document.querySelector('.birth-ritual .birth-coin[data-coin="year"].is-active')
@@ -210,32 +208,42 @@
   birthObserver.observe(document.body, { childList: true, subtree: true });
 
   // ---------------------------------------------------------------------------
-  // 真結流程：玩家真正需要作出的最後行為是「落下第五印」。
-  // 第五印落下、總命牒墨乾後，自動進黎明與「櫻隱・終」，不再要求多按一次。
+  // 真結流程：真正的最後操作是「落下第五印」。
+  // 墨乾後自動進入黎明與「櫻隱・終」，不再要求額外點擊。
   // ---------------------------------------------------------------------------
   if (controls) {
     let dawnTimer = 0;
+    let scheduledButton = null;
 
     const syncFinalControl = () => {
-      clearTimeout(dawnTimer);
       const buttons = [...controls.querySelectorAll('button')];
-      const dawn = buttons.find(button => button.textContent.trim() === '走向黎明' || button.textContent.trim() === '走向黎明・櫻隱終幕');
+      const dawn = buttons.find(button =>
+        button.classList.contains('v58-dawn-ending-control') ||
+        button.textContent.trim() === '走向黎明' ||
+        button.textContent.trim() === '走向黎明・櫻隱終幕'
+      );
+
       if (!dawn) {
+        clearTimeout(dawnTimer);
+        dawnTimer = 0;
+        scheduledButton = null;
         controls.classList.remove('v58-auto-ending');
         return;
       }
 
       controls.classList.add('v58-auto-ending');
-      dawn.textContent = '黎明將至';
       dawn.classList.add('v58-dawn-ending-control');
       dawn.setAttribute('aria-label', '命牒墨乾後自動進入櫻隱終幕');
-      dawn.disabled = true;
 
       const prompt = document.getElementById('destinyPrompt');
       if (prompt) prompt.textContent = '墨乾了。門外的天光正慢慢亮起……';
 
+      if (scheduledButton === dawn && dawnTimer) return;
+      clearTimeout(dawnTimer);
+      scheduledButton = dawn;
       dawnTimer = setTimeout(() => {
-        dawn.disabled = false;
+        dawnTimer = 0;
+        if (!document.body.contains(dawn)) return;
         dawn.click();
       }, 1800);
     };
