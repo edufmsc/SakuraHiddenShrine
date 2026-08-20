@@ -10,7 +10,7 @@
     if (scene?.art) Object.assign(scene.art, patch);
   };
 
-  // Pixel QA 2026-08-19：只調整實際看過圖片後確定的文字區與焦點。
+  // Pixel QA：只調整實際看過畫面後確定的文字安全區與焦點。
   patchArt(findScene('love', 'love.silence'), {
     side: 'left-top',
     desktopFocus: '60% 49%',
@@ -27,6 +27,13 @@
     side: 'left-top',
     desktopFocus: '59% 49%',
     mobileFocus: '50% 30%'
+  });
+
+  // 最終人工驗收：此幕人物與桌面證據集中在左側，文字移到右上。
+  patchArt(findScene('love', 'love.evidence'), {
+    side: 'right-top',
+    desktopFocus: '50% 49%',
+    mobileFocus: '50% 28%'
   });
 
   patchArt(findScene('career', 'career.borrowed'), {
@@ -59,6 +66,13 @@
     mobileFocus: '50% 29%'
   });
 
+  // 最終人工驗收：天亮以前的主角在左側，右下保留大面積乾淨景深。
+  patchArt(findFinaleScene('finale.choice'), {
+    side: 'right-bottom',
+    desktopFocus: '48% 52%',
+    mobileFocus: '50% 31%'
+  });
+
   // 新總命牒源圖的空白紙面與舊圖位置完全不同。
   // 座標來自實際像素檢查，避免最後文字寫到九尾或背景上。
   const finalScrollBox = {
@@ -72,16 +86,18 @@
   STORY.sceneLockV1 = {
     ...(STORY.sceneLockV1 || {}),
     pixelQaApplied: true,
-    pixelQaRevision: '2026-08-19-a',
+    pixelQaRevision: '2026-08-20-a',
     pixelQaChanges: [
       'love.silence.safe-left-top',
       'love.turn.safe-left-top',
       'love.ritual.safe-left-top',
+      'love.evidence.safe-right-top',
       'career.borrowed.safe-left-top',
       'life.turn.safe-right-bottom',
       'forbidden.ending.safe-left-top',
       'finale.gate.safe-right-bottom',
       'finale.confession.safe-left-top',
+      'finale.choice.safe-right-bottom',
       'finale.ending.scroll-box'
     ]
   };
