@@ -22,11 +22,30 @@
   overflow-wrap: anywhere;
 }
 
-/* 正文、末筆提示、選項三區分開，避免 career/life 命牒底部互相重疊。 */
+/* 最後一句是玩家真正帶走的內容，不能被 compact/tight 壓成小字。 */
+.destiny-ink-line.is-final p {
+  font-size: clamp(17px, 1.28vw, 21px) !important;
+  line-height: 1.62 !important;
+  font-weight: 850 !important;
+}
+
+/* 即使 JS 因長內容加上 compact / tight，也只縮排版，不犧牲可讀性。 */
+.destiny-paper.is-compact .destiny-ink-line p,
+.destiny-paper.is-tight .destiny-ink-line p {
+  font-size: clamp(16px, 1.12vw, 19px) !important;
+  line-height: 1.56 !important;
+}
+
+.destiny-paper.is-compact .destiny-ink-line.is-final p,
+.destiny-paper.is-tight .destiny-ink-line.is-final p {
+  font-size: clamp(17px, 1.22vw, 20px) !important;
+}
+
+/* 正文、末筆提示、選項三區分開。 */
 .destiny-ink {
   flex: 0 0 auto !important;
   min-height: auto !important;
-  padding-bottom: 18px !important;
+  padding-bottom: 14px !important;
 }
 
 .destiny-prompt {
@@ -38,6 +57,9 @@
   margin-bottom: 6px !important;
   padding-top: 12px !important;
   background: transparent;
+  font-size: clamp(14px, 1vw, 17px) !important;
+  line-height: 1.55 !important;
+  font-weight: 800 !important;
 }
 
 .destiny-controls {
@@ -51,6 +73,13 @@
   padding: 10px 0 4px;
   background: linear-gradient(180deg, rgba(239, 226, 202, 0), rgba(239, 226, 202, .94) 24%, rgba(239, 226, 202, .99) 100%);
   box-shadow: 0 -12px 20px -18px rgba(69, 37, 27, .5);
+}
+
+.destiny-control,
+.destiny-paper.is-compact .destiny-control,
+.destiny-paper.is-tight .destiny-control {
+  font-size: clamp(14px, .98vw, 17px) !important;
+  line-height: 1.42 !important;
 }
 
 .destiny-reader--career .destiny-controls {
@@ -69,7 +98,8 @@
   background: linear-gradient(180deg, rgba(239,225,190,0), rgba(239,225,190,.95) 24%, rgba(239,225,190,.99));
 }
 
-/* 桌機命牒固定在合理畫面高度，由紙張本身捲動；不讓內容把按鈕推出視窗。 */
+/* 桌機：短命牒依內容自然收高，不再硬撐 78vh 留一大片空白；
+   內容真的太長時才由紙張本身捲動。 */
 @media (min-width: 721px) {
   .destiny-reader__paper-wrap {
     min-height: 0;
@@ -79,17 +109,21 @@
   .destiny-reader--love .destiny-paper,
   .destiny-reader--total .destiny-paper {
     min-height: 0 !important;
-    height: min(78dvh, 720px);
+    height: auto !important;
     max-height: calc(100dvh - 108px) !important;
     padding-bottom: 18px !important;
   }
 
-  /* 固定在底部的命牒操作列上方保留空間，最後一行不會被按鈕蓋住。 */
-  .destiny-ink {
-    padding-bottom: 76px !important;
+  /* 只有真的需要捲動時，才為 sticky 操作列預留底部空間。 */
+  .destiny-paper.scene-lock-v1-can-scroll .destiny-ink {
+    padding-bottom: 68px !important;
   }
 
-  /* 禁之卷・近火：桌機恢復 2×2 四格，不再被 whisper 的通用單欄規則吃掉。 */
+  .destiny-paper:not(.scene-lock-v1-can-scroll) .destiny-ink {
+    padding-bottom: 14px !important;
+  }
+
+  /* 禁之卷・近火：桌機固定 2×2 四格。 */
   .app[data-scene="forbidden.bait"] .choices {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 10px !important;
@@ -133,7 +167,7 @@
     inset 0 0 65px rgba(113, 62, 40, .09);
 }
 
-/* 真結不是次要功能：黎明入口跨滿整列。 */
+/* 保留相容：舊版若仍出現黎明按鈕，視覺保持主按鈕；新版已改自動進終幕。 */
 .v58-dawn-ending-control {
   grid-column: 1 / -1;
   min-height: 52px;
@@ -235,6 +269,10 @@
     padding-bottom: 4px;
     background: transparent !important;
     box-shadow: none;
+  }
+
+  .destiny-ink-line.is-final p {
+    font-size: clamp(16px, 4.4vw, 19px) !important;
   }
 
   #reportBtn,
