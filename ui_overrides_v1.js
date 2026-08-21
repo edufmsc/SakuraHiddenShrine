@@ -2,31 +2,40 @@
   'use strict';
 
   const SAVE_KEY = 'sakura-hidden-shrine-v58';
+  const mobileQuery = window.matchMedia('(max-width: 720px)');
 
   // ---------------------------------------------------------------------------
-  // 命牒：可見捲動狀態＋逐字自動跟隨
+  // 命牒：可見捲動狀態＋閱讀保護
+  // Desktop 可在玩家仍靠近底部時跟隨新墨跡；Mobile 預設不自動把玩家拖走，
+  // 讓標題與前段文字能照自己的速度閱讀。
   // ---------------------------------------------------------------------------
   const paper = document.getElementById('destinyPaper');
   const ink = document.getElementById('destinyInk');
   const reader = document.getElementById('destinyReader');
   const controls = document.getElementById('destinyControls');
+  const prompt = document.getElementById('destinyPrompt');
+
+  let updateFinalGate = () => {};
 
   if (paper && ink && reader) {
-    let autoFollow = true;
+    let autoFollow = !mobileQuery.matches;
     let programmatic = false;
     let followFrame = 0;
 
     const distanceFromBottom = () => Math.max(0, paper.scrollHeight - paper.clientHeight - paper.scrollTop);
 
     const updateScrollableState = () => {
-      paper.classList.toggle('scene-lock-v1-can-scroll', paper.scrollHeight > paper.clientHeight + 4);
+      const scrollable = paper.scrollHeight > paper.clientHeight + 4;
+      paper.classList.toggle('scene-lock-v1-can-scroll', scrollable);
+      return scrollable;
     };
 
     const followLatestInk = () => {
       cancelAnimationFrame(followFrame);
       followFrame = requestAnimationFrame(() => {
         updateScrollableState();
-        if (reader.hidden || !autoFollow) return;
+        updateFinalGate();
+        if (reader.hidden || !autoFollow || mobileQuery.matches) return;
         programmatic = true;
         paper.scrollTop = paper.scrollHeight;
         requestAnimationFrame(() => { programmatic = false; });
@@ -35,15 +44,16 @@
 
     paper.addEventListener('scroll', () => {
       updateScrollableState();
-      if (programmatic) return;
-      autoFollow = distanceFromBottom() <= 80;
+      if (!programmatic) autoFollow = !mobileQuery.matches && distanceFromBottom() <= 80;
+      updateFinalGate();
     }, { passive: true });
 
     const readerObserver = new MutationObserver(() => {
       if (!reader.hidden) {
-        autoFollow = true;
+        autoFollow = !mobileQuery.matches;
         paper.scrollTop = 0;
         updateScrollableState();
+        requestAnimationFrame(updateFinalGate);
       }
     });
     readerObserver.observe(reader, { attributes: true, attributeFilter: ['hidden', 'class'] });
@@ -55,14 +65,22 @@
       characterData: true
     });
 
-    window.addEventListener('resize', updateScrollableState, { passive: true });
+    const handleViewportChange = () => {
+      autoFollow = !mobileQuery.matches;
+      updateScrollableState();
+      updateFinalGate();
+    };
+    mobileQuery.addEventListener?.('change', handleViewportChange);
+    window.addEventListener('resize', () => {
+      updateScrollableState();
+      updateFinalGate();
+    }, { passive: true });
     updateScrollableState();
   }
 
   // ---------------------------------------------------------------------------
   // 生辰年份相容修正：舊核心把年份鎖成 18～90 歲；正式規則只有「必須成年」。
-  // 超過 90 歲時，畫面保留真實年份，舊核心暫用同閏年型態的成年年份跑完銅錢流程；
-  // 完成後再用真實生日重算 fortuneSeed 並重新載入下一幕。
+  // 另外攔下不存在的日期，錯一天只重填「日」，不把已輸入的年／月一起清掉。
   // ---------------------------------------------------------------------------
   const birthCompat = {
     realYear: null,
@@ -111,6 +129,12 @@
     birthCompat.surrogateYear = chooseSurrogateYear(cached);
   };
 
+  const readCoinValue = (form, coin) => {
+    const text = form.querySelector(`.birth-coin[data-coin="${coin}"] small`)?.textContent?.trim();
+    const value = Number(text);
+    return Number.isInteger(value) ? value : null;
+  };
+
   const patchBirthVisual = () => {
     restoreBirthCache();
     if (!birthCompat.realYear) return;
@@ -134,6 +158,7 @@
     if (!form || form.classList.contains('birth-ritual--complete')) return;
     const input = form.querySelector('input[name="value"]');
     const activeCoin = form.querySelector('.birth-coin.is-active')?.dataset.coin;
+    const note = form.querySelector('.form-note');
     if (!input || !activeCoin) return;
 
     const raw = Number(input.value);
@@ -142,7 +167,13 @@
     if (activeCoin === 'year') {
       const nowYear = new Date().getFullYear();
       const latestAdultYear = nowYear - 18;
-      if (raw > latestAdultYear) return;
+      if (raw > latestAdultYear) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        if (note) note.textContent = '命館只替成年人開卷；請輸入已滿 18 歲的出生年份。';
+        input.focus();
+        return;
+      }
 
       const oldLegacyMin = nowYear - 90;
       if (raw < oldLegacyMin) {
@@ -157,8 +188,26 @@
     }
 
     restoreBirthCache();
-    if (activeCoin === 'month') birthCompat.month = raw;
+    if (activeCoin === 'month') {
+      birthCompat.month = raw;
+      return;
+    }
+
     if (activeCoin === 'day') {
+      const realYear = birthCompat.realYear || readCoinValue(form, 'year');
+      const month = birthCompat.month || readCoinValue(form, 'month');
+      if (realYear && month) {
+        const date = new Date(realYear, month - 1, raw);
+        const valid = date.getFullYear() === realYear && date.getMonth() === month - 1 && date.getDate() === raw;
+        if (!valid) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          if (note) note.textContent = '這一天不存在。前兩枚已經保留，只要重新輸入正確的日期。';
+          input.value = '';
+          input.focus();
+          return;
+        }
+      }
       birthCompat.day = raw;
       birthCompat.pendingFinalize = Boolean(birthCompat.realYear);
     }
@@ -186,9 +235,6 @@
     return true;
   };
 
-  // Capture the completion click while the birth-complete DOM still exists.
-  // The core handler then advances/saves; our zero-delay task rewrites the exact real-year seed
-  // and reloads so the in-memory state also matches the corrected localStorage.
   document.addEventListener('click', event => {
     restoreBirthCache();
     if (!birthCompat.realYear || !birthCompat.pendingFinalize) return;
@@ -208,59 +254,75 @@
   birthObserver.observe(document.body, { childList: true, subtree: true });
 
   // ---------------------------------------------------------------------------
-  // 真結流程：真正的最後操作是「落下第五印」。
-  // 墨乾後自動進入黎明與「櫻隱・終」，不再要求額外點擊。
+  // 真結流程：不再倒數自動跳劇終。
+  // 玩家先完整讀完總命牒；若命牒可捲動，只有滑到最後一段後終幕按鈕才會解鎖。
+  // 最後一次操作是「收下命牒・看見黎明」，點下後才進「天亮了。／櫻隱・終」。
   // ---------------------------------------------------------------------------
-  if (controls) {
-    let dawnTimer = 0;
-    let scheduledButton = null;
+  if (controls && paper) {
+    let finalButton = null;
 
-    const syncFinalControl = () => {
-      const buttons = [...controls.querySelectorAll('button')];
-      const dawn = buttons.find(button =>
-        button.classList.contains('v58-dawn-ending-control') ||
-        button.textContent.trim() === '走向黎明' ||
-        button.textContent.trim() === '走向黎明・櫻隱終幕'
-      );
+    const findFinalButton = () => [...controls.querySelectorAll('button')].find(button =>
+      button.textContent.trim() === '走向黎明' ||
+      button.textContent.trim() === '走向黎明・櫻隱終幕' ||
+      button.classList.contains('v58-final-accept-control')
+    ) || null;
 
+    updateFinalGate = () => {
+      const dawn = findFinalButton();
       if (!dawn) {
-        clearTimeout(dawnTimer);
-        dawnTimer = 0;
-        scheduledButton = null;
-        controls.classList.remove('v58-auto-ending');
+        finalButton = null;
+        controls.classList.remove('v58-final-reading-gate');
         return;
       }
 
-      controls.classList.add('v58-auto-ending');
-      dawn.classList.add('v58-dawn-ending-control');
-      dawn.setAttribute('aria-label', '命牒墨乾後自動進入櫻隱終幕');
+      finalButton = dawn;
+      controls.classList.add('v58-final-reading-gate');
+      dawn.classList.add('v58-final-accept-control');
+      dawn.textContent = '收下命牒・看見黎明';
 
-      const prompt = document.getElementById('destinyPrompt');
-      if (prompt) prompt.textContent = '墨乾了。門外的天光正慢慢亮起……';
+      const scrollable = paper.scrollHeight > paper.clientHeight + 4;
+      const readToEnd = !scrollable || (paper.scrollHeight - paper.clientHeight - paper.scrollTop) <= 42;
+      dawn.disabled = !readToEnd;
+      dawn.setAttribute('aria-disabled', String(!readToEnd));
+      dawn.setAttribute('aria-label', readToEnd ? '收下命牒並進入櫻隱終幕' : '請先讀到命牒最後一行');
 
-      if (scheduledButton === dawn && dawnTimer) return;
-      clearTimeout(dawnTimer);
-      scheduledButton = dawn;
-      dawnTimer = setTimeout(() => {
-        dawnTimer = 0;
-        if (!document.body.contains(dawn)) return;
-        dawn.click();
-      }, 1800);
+      if (prompt) {
+        prompt.hidden = false;
+        prompt.textContent = readToEnd
+          ? '最後一行已經讀完。這一夜只剩你自己願不願意把它收下。'
+          : '先把這一卷看完。滑到最後一行後，門外的天光才會亮起。';
+      }
     };
 
-    const controlObserver = new MutationObserver(syncFinalControl);
+    const controlObserver = new MutationObserver(() => requestAnimationFrame(updateFinalGate));
     controlObserver.observe(controls, { childList: true, subtree: true });
-    syncFinalControl();
+    paper.addEventListener('scroll', updateFinalGate, { passive: true });
+    requestAnimationFrame(updateFinalGate);
   }
 
   // ---------------------------------------------------------------------------
-  // 手機功能選單
+  // 手機功能選單：除了單字圖章，也提供完整功能名稱，第一次玩的玩家不用猜。
   // ---------------------------------------------------------------------------
   const app = document.getElementById('app');
   const menu = document.getElementById('menuBtn');
   const toolbarActions = document.getElementById('toolbarActions');
 
   if (app && menu && toolbarActions) {
+    const labels = {
+      soundBtn: '音樂',
+      sceneryBtn: '只看場景',
+      galleryBtn: '藏景',
+      reportBtn: '命牒',
+      homeBtn: '回四門',
+      resetBtn: '重新起盤'
+    };
+
+    Object.entries(labels).forEach(([id, label]) => {
+      const button = document.getElementById(id);
+      if (!button) return;
+      button.dataset.mobileLabel = label;
+    });
+
     const syncMenuLabel = () => {
       const open = app.classList.contains('menu-open');
       menu.setAttribute('aria-expanded', String(open));
@@ -289,7 +351,6 @@
       closeMenu({ restoreFocus: true });
     });
 
-    const mobileQuery = window.matchMedia('(max-width: 720px)');
     const handleViewportChange = event => {
       if (!event.matches) closeMenu();
     };
