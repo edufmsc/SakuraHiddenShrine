@@ -259,7 +259,7 @@
   // 最後一次操作是「收下命牒・看見黎明」，點下後才進「天亮了。／櫻隱・終」。
   // ---------------------------------------------------------------------------
   if (controls && paper) {
-    let finalButton = null;
+    const finalLabel = '收下命牒・看見黎明';
 
     const findFinalButton = () => [...controls.querySelectorAll('button')].find(button =>
       button.textContent.trim() === '走向黎明' ||
@@ -270,15 +270,13 @@
     updateFinalGate = () => {
       const dawn = findFinalButton();
       if (!dawn) {
-        finalButton = null;
         controls.classList.remove('v58-final-reading-gate');
         return;
       }
 
-      finalButton = dawn;
       controls.classList.add('v58-final-reading-gate');
       dawn.classList.add('v58-final-accept-control');
-      dawn.textContent = '收下命牒・看見黎明';
+      if (dawn.textContent.trim() !== finalLabel) dawn.textContent = finalLabel;
 
       const scrollable = paper.scrollHeight > paper.clientHeight + 4;
       const readToEnd = !scrollable || (paper.scrollHeight - paper.clientHeight - paper.scrollTop) <= 42;
@@ -288,14 +286,16 @@
 
       if (prompt) {
         prompt.hidden = false;
-        prompt.textContent = readToEnd
+        const copy = readToEnd
           ? '最後一行已經讀完。這一夜只剩你自己願不願意把它收下。'
           : '先把這一卷看完。滑到最後一行後，門外的天光才會亮起。';
+        if (prompt.textContent !== copy) prompt.textContent = copy;
       }
     };
 
+    // 只監看 controls 的直接子節點。按鈕內文字更新不會再反過來觸發自己。
     const controlObserver = new MutationObserver(() => requestAnimationFrame(updateFinalGate));
-    controlObserver.observe(controls, { childList: true, subtree: true });
+    controlObserver.observe(controls, { childList: true });
     paper.addEventListener('scroll', updateFinalGate, { passive: true });
     requestAnimationFrame(updateFinalGate);
   }
