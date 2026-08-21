@@ -84,11 +84,13 @@
     if (hint && hint.textContent !== text) hint.textContent = text;
   };
 
-  const syncFinaleMobileProtection = () => {
+  const syncMobileReactionProtection = () => {
     const actualSrc = String(image.currentSrc || image.src || image.getAttribute('src') || '');
     const needsContain = mobileQuery.matches && [
       'final_complete_dawn.webp',
-      'final_refuse_room.webp'
+      'final_refuse_room.webp',
+      'love_face_touch.webp',
+      'LOVE_lips_mobile.webp'
     ].some(name => actualSrc.endsWith(name));
     app.classList.toggle('v58-finale-landscape-reaction', needsContain);
   };
@@ -98,7 +100,7 @@
     syncRaf = requestAnimationFrame(() => {
       clearCustomHotspots();
       syncFaceChoiceMode();
-      syncFinaleMobileProtection();
+      syncMobileReactionProtection();
       const scene = app.dataset.scene || '';
 
       if (scene === 'finale.seal-test') {
