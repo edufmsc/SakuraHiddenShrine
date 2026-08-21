@@ -12,7 +12,6 @@
   scrollbar-color: rgba(122, 43, 36, .58) rgba(93, 54, 38, .09) !important;
 }
 
-/* 文字不可因舊動畫／固定高度切掉第二行。 */
 .destiny-ink-line {
   overflow: visible !important;
   min-height: max-content;
@@ -22,14 +21,12 @@
   overflow-wrap: anywhere;
 }
 
-/* 最後一句是玩家真正帶走的內容，不能被 compact/tight 壓成小字。 */
 .destiny-ink-line.is-final p {
   font-size: clamp(17px, 1.28vw, 21px) !important;
   line-height: 1.62 !important;
   font-weight: 850 !important;
 }
 
-/* 即使 JS 因長內容加上 compact / tight，也只縮排版，不犧牲可讀性。 */
 .destiny-paper.is-compact .destiny-ink-line p,
 .destiny-paper.is-tight .destiny-ink-line p {
   font-size: clamp(16px, 1.12vw, 19px) !important;
@@ -41,11 +38,17 @@
   font-size: clamp(17px, 1.22vw, 20px) !important;
 }
 
-/* 正文、末筆提示、選項三區分開。 */
+/* 正文、末筆提示、選項三區分開；不再用 flex 撐出無意義大空白。 */
 .destiny-ink {
   flex: 0 0 auto !important;
   min-height: auto !important;
+  gap: clamp(8px, 1.1vh, 13px) !important;
   padding-bottom: 14px !important;
+}
+
+.destiny-ink-line {
+  margin: 0 !important;
+  padding-bottom: clamp(8px, 1vh, 12px) !important;
 }
 
 .destiny-prompt {
@@ -85,30 +88,47 @@
 .destiny-reader--career .destiny-controls {
   background: linear-gradient(180deg, rgba(232,225,205,0), rgba(232,225,205,.95) 24%, rgba(232,225,205,.99));
 }
-
 .destiny-reader--life .destiny-controls {
   background: linear-gradient(180deg, rgba(232,228,221,0), rgba(232,228,221,.95) 24%, rgba(232,228,221,.99));
 }
-
 .destiny-reader--forbidden .destiny-controls {
   background: linear-gradient(180deg, rgba(234,220,198,0), rgba(234,220,198,.95) 24%, rgba(234,220,198,.99));
 }
-
 .destiny-reader--finale .destiny-controls {
   background: linear-gradient(180deg, rgba(239,225,190,0), rgba(239,225,190,.95) 24%, rgba(239,225,190,.99));
 }
 
-/* 第五卷封卷後已改為自動進入黎明，不顯示多餘的「走向黎明／重看」操作列。 */
-.destiny-controls.v58-auto-ending {
-  display: none !important;
+/* 真結的最後一步一定由玩家自己按，不再隱藏、不再倒數自動觸發。 */
+.v58-final-accept-control {
+  grid-column: 1 / -1;
+  min-height: 52px;
+  margin-top: 10px;
+  border: 1px solid rgba(142, 48, 54, .82) !important;
+  background: linear-gradient(180deg, rgba(156, 53, 60, .22), rgba(88, 27, 34, .10)) !important;
+  box-shadow: 0 9px 24px rgba(84, 22, 28, .14), inset 0 0 18px rgba(255, 235, 216, .08);
+  color: #7a282e !important;
+  font-weight: 900 !important;
+  letter-spacing: .06em;
+  text-align: center !important;
 }
 
-/* 桌機：短命牒依內容自然收高，不再硬撐 78vh 留一大片空白；
-   內容真的太長時才由紙張本身捲動。 */
+.v58-final-accept-control:not(:disabled):hover,
+.v58-final-accept-control:not(:disabled):focus-visible {
+  background: linear-gradient(180deg, rgba(164, 56, 63, .31), rgba(96, 29, 37, .15)) !important;
+  border-color: rgba(122, 38, 45, .96) !important;
+  outline: 2px solid rgba(145, 55, 60, .18);
+  outline-offset: 2px;
+}
+
+.v58-final-accept-control:disabled {
+  opacity: .42 !important;
+  cursor: not-allowed !important;
+  filter: grayscale(.22);
+}
+
+/* 桌機：短命牒依內容自然收高；內容真的太長才由紙張本身捲動。 */
 @media (min-width: 721px) {
-  .destiny-reader__paper-wrap {
-    min-height: 0;
-  }
+  .destiny-reader__paper-wrap { min-height: 0; }
 
   .destiny-paper,
   .destiny-reader--love .destiny-paper,
@@ -119,21 +139,13 @@
     padding-bottom: 18px !important;
   }
 
-  /* 只有真的需要捲動時，才為 sticky 操作列預留底部空間。 */
-  .destiny-paper.scene-lock-v1-can-scroll .destiny-ink {
-    padding-bottom: 68px !important;
-  }
+  .destiny-paper.scene-lock-v1-can-scroll .destiny-ink { padding-bottom: 68px !important; }
+  .destiny-paper:not(.scene-lock-v1-can-scroll) .destiny-ink { padding-bottom: 14px !important; }
 
-  .destiny-paper:not(.scene-lock-v1-can-scroll) .destiny-ink {
-    padding-bottom: 14px !important;
-  }
-
-  /* 禁之卷・近火：桌機固定 2×2 四格。 */
   .app[data-scene="forbidden.bait"] .choices {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 10px !important;
   }
-
   .app[data-scene="forbidden.bait"] .choice-button {
     min-height: 68px;
     padding: 11px 13px;
@@ -149,21 +161,16 @@
   display: block !important;
   width: 9px;
 }
-
 .destiny-paper::-webkit-scrollbar-track {
   background: rgba(93, 54, 38, .08);
   border-radius: 999px;
 }
-
 .destiny-paper::-webkit-scrollbar-thumb {
   background: rgba(122, 43, 36, .46);
   border: 2px solid rgba(239, 219, 183, .72);
   border-radius: 999px;
 }
-
-.destiny-paper::-webkit-scrollbar-thumb:hover {
-  background: rgba(122, 43, 36, .68);
-}
+.destiny-paper::-webkit-scrollbar-thumb:hover { background: rgba(122, 43, 36, .68); }
 
 .destiny-paper.scene-lock-v1-can-scroll {
   box-shadow:
@@ -172,41 +179,13 @@
     inset 0 0 65px rgba(113, 62, 40, .09);
 }
 
-/* 保留相容：若舊狀態短暫顯示黎明按鈕，仍維持主按鈕辨識。 */
-.v58-dawn-ending-control {
-  grid-column: 1 / -1;
-  min-height: 52px;
-  margin-top: 10px;
-  border: 1px solid rgba(142, 48, 54, .82) !important;
-  background: linear-gradient(180deg, rgba(156, 53, 60, .22), rgba(88, 27, 34, .10)) !important;
-  box-shadow: 0 9px 24px rgba(84, 22, 28, .14), inset 0 0 18px rgba(255, 235, 216, .08);
-  color: #7a282e !important;
-  font-weight: 900 !important;
-  letter-spacing: .08em;
-}
-
-.v58-dawn-ending-control:hover,
-.v58-dawn-ending-control:focus-visible {
-  background: linear-gradient(180deg, rgba(164, 56, 63, .31), rgba(96, 29, 37, .15)) !important;
-  border-color: rgba(122, 38, 45, .96) !important;
-  outline: 2px solid rgba(145, 55, 60, .18);
-  outline-offset: 2px;
-}
-
-/* 控制按鈕只做語意區分，不改整套視覺。 */
-#reportBtn {
-  border-color: rgba(239, 219, 183, .72);
-}
-
+#reportBtn { border-color: rgba(239, 219, 183, .72); }
 #resetBtn {
   border-color: rgba(220, 92, 92, .78);
   background: rgba(58, 12, 18, .68);
 }
-
 #resetBtn:hover,
-#resetBtn:focus-visible {
-  background: rgba(118, 24, 34, .48);
-}
+#resetBtn:focus-visible { background: rgba(118, 24, 34, .48); }
 
 /* --------------------------------------------------------------------------
    V58 圖上互動熱區
@@ -225,7 +204,6 @@
   transition: opacity .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
   touch-action: manipulation;
 }
-
 .v58-interaction-hotspot::after {
   content: '';
   position: absolute;
@@ -234,7 +212,6 @@
   border-radius: inherit;
   pointer-events: none;
 }
-
 .v58-interaction-hotspot:hover,
 .v58-interaction-hotspot:focus-visible {
   opacity: .92;
@@ -243,22 +220,10 @@
   box-shadow: 0 0 28px rgba(255, 120, 92, .17), inset 0 0 20px rgba(255, 222, 207, .08);
   outline: none;
 }
-
-.v58-interaction-hotspot--seal {
-  border-radius: 46% 54% 48% 52%;
-}
-
-.v58-interaction-hotspot--thread {
-  border-radius: 48% 52% 44% 56%;
-}
-
-.app.v58-face-choice-mode .scene-hotspot {
-  display: none !important;
-}
-
-.app.v58-face-choice-mode .scene-interaction-hint {
-  opacity: .92;
-}
+.v58-interaction-hotspot--seal { border-radius: 46% 54% 48% 52%; }
+.v58-interaction-hotspot--thread { border-radius: 48% 52% 44% 56%; }
+.app.v58-face-choice-mode .scene-hotspot { display: none !important; }
+.app.v58-face-choice-mode .scene-interaction-hint { opacity: .92; }
 
 /* --------------------------------------------------------------------------
    手機
@@ -266,35 +231,108 @@
 @media (max-width: 720px) {
   .destiny-paper {
     -webkit-overflow-scrolling: touch;
+    padding: 22px 22px 24px !important;
   }
 
+  /* 手機最重要的是「不用放大畫面也能讀」。 */
+  .destiny-paper__head { gap: 10px !important; padding-bottom: 12px !important; }
+  .destiny-paper__head small {
+    font-size: 12px !important;
+    line-height: 1.35 !important;
+    letter-spacing: .10em !important;
+  }
+  .destiny-paper__head h2 {
+    font-size: clamp(24px, 6.6vw, 31px) !important;
+    line-height: 1.24 !important;
+  }
+  .destiny-paper__glyph {
+    width: 38px !important;
+    height: 38px !important;
+    font-size: 18px !important;
+  }
+  .destiny-ink {
+    gap: 8px !important;
+    padding-top: 14px !important;
+    padding-bottom: 12px !important;
+  }
+  .destiny-ink-line small {
+    margin-bottom: 4px !important;
+    font-size: 14px !important;
+    line-height: 1.35 !important;
+    letter-spacing: .08em !important;
+  }
+  .destiny-ink-line p,
+  .destiny-reader--total .destiny-ink-line p,
+  .destiny-paper.is-compact .destiny-ink-line p,
+  .destiny-paper.is-tight .destiny-ink-line p {
+    font-size: clamp(16px, 4.35vw, 18px) !important;
+    line-height: 1.58 !important;
+  }
+  .destiny-ink-line.is-final p,
+  .destiny-paper.is-compact .destiny-ink-line.is-final p,
+  .destiny-paper.is-tight .destiny-ink-line.is-final p {
+    font-size: clamp(17px, 4.7vw, 19px) !important;
+    line-height: 1.58 !important;
+  }
+  .destiny-prompt {
+    font-size: 15px !important;
+    line-height: 1.5 !important;
+    margin-top: 8px !important;
+  }
   .destiny-controls {
     position: static;
+    grid-template-columns: 1fr !important;
+    gap: 2px !important;
     padding-top: 8px;
     padding-bottom: 4px;
     background: transparent !important;
     box-shadow: none;
   }
-
-  .destiny-controls.v58-auto-ending {
-    display: none !important;
+  .destiny-control,
+  .destiny-paper.is-compact .destiny-control,
+  .destiny-paper.is-tight .destiny-control {
+    min-height: 44px;
+    padding: 10px 2px !important;
+    font-size: 15.5px !important;
+    line-height: 1.42 !important;
   }
-
-  .destiny-ink-line.is-final p {
-    font-size: clamp(16px, 4.4vw, 19px) !important;
+  .v58-final-accept-control {
+    min-height: 50px;
+    margin-top: 8px;
+    padding: 11px 8px !important;
+    font-size: 16px !important;
   }
 
   #reportBtn,
   #homeBtn,
-  #resetBtn {
-    font-size: 14px;
-    font-weight: 800;
-  }
+  #resetBtn { font-size: 14px; font-weight: 800; }
 
-  .v58-dawn-ending-control {
-    min-height: 50px;
-    margin-top: 8px;
-    font-size: 15px !important;
+  /* 手機展開功能後顯示完整名稱，而不是只靠單字猜功能。 */
+  .toolbar-actions {
+    width: min(286px, calc(100vw - 28px)) !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 7px !important;
+    padding: 9px !important;
+  }
+  .toolbar-actions .round-control {
+    width: auto !important;
+    min-width: 0;
+    height: 42px !important;
+    padding: 0 10px !important;
+    border-radius: 11px !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 7px;
+    font-size: 13px !important;
+  }
+  .toolbar-actions .round-control::after {
+    content: attr(data-mobile-label);
+    color: rgba(255, 245, 247, .86);
+    font-family: "Noto Sans TC", "PingFang TC", sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
   }
 
   .v58-interaction-hotspot {
@@ -308,11 +346,7 @@
     object-position: 50% 36% !important;
     transform: none !important;
   }
-
-  .app.v58-finale-landscape-reaction .scene-picture {
-    background: #050306;
-  }
-
+  .app.v58-finale-landscape-reaction .scene-picture { background: #050306; }
   .app.v58-finale-landscape-reaction .story-panel {
     height: min(32dvh, 286px) !important;
     max-height: min(32dvh, 286px) !important;
