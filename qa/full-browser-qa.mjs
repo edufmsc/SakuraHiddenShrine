@@ -24,7 +24,6 @@ async function settleSceneImage(page) {
     const src = img.getAttribute('src') || '';
     return src !== previous || img.complete;
   }, before, { timeout: 4500 }).catch(() => {});
-
   await page.locator('#sceneImage').evaluate(async img => {
     if (!img) return;
     try {
@@ -104,7 +103,6 @@ async function chooseDoor(page, log) {
   const state = await page.evaluate(() => {
     try { return JSON.parse(localStorage.getItem('sakura-hidden-shrine-v58') || '{}'); } catch { return {}; }
   });
-
   for (const id of ['love','career','life','forbidden']) {
     if (!state.routes?.[id]?.completed) {
       const btn = page.locator(`[data-route-target="${id}"]`);
@@ -116,7 +114,6 @@ async function chooseDoor(page, log) {
       }
     }
   }
-
   const finalDoor = page.locator('#finalDoorBtn');
   if (await finalDoor.isVisible().catch(() => false) && await finalDoor.isEnabled().catch(() => false)) {
     await finalDoor.click();
@@ -127,28 +124,45 @@ async function chooseDoor(page, log) {
   return false;
 }
 
+async function progressDestinyReader(page, log) {
+  const reader = page.locator('#destinyReader');
+  if (!await reader.isVisible().catch(() => false)) return false;
+
+  const paper = page.locator('#destinyPaper');
+  if (await paper.count()) {
+    const written = await paper.evaluate(el => el.classList.contains('is-written')).catch(() => true);
+    if (!written) {
+      await paper.click({ position: { x: 24, y: 24 } }).catch(() => {});
+      log.push('skip destiny handwriting');
+      await sleep(140);
+    }
+    await paper.evaluate(el => { el.scrollTop = el.scrollHeight; });
+  }
+
+  await page.waitForFunction(() => {
+    return [...document.querySelectorAll('#destinyControls button')]
+      .some(button => !button.disabled && getComputedStyle(button).display !== 'none');
+  }, { timeout: 2500 }).catch(() => {});
+
+  if (await clickFirst(page, ['#destinyControls button:not([disabled])'])) {
+    log.push('destiny control');
+    return true;
+  }
+  return false;
+}
+
 async function progressOne(page, log, flags) {
   if (await fillVisibleForm(page, log, flags)) return true;
 
   const birthComplete = page.locator('.birth-ritual--complete');
-  if (await birthComplete.count() && await birthComplete.isVisible().catch(() => false)) {
-    flags.birthCompleteSeen = true;
-  }
+  if (await birthComplete.count() && await birthComplete.isVisible().catch(() => false)) flags.birthCompleteSeen = true;
 
   const appMode = await page.locator('#app').getAttribute('data-mode').catch(() => '');
   if (appMode === 'hub' || await page.locator('#doorStage').isVisible().catch(() => false)) {
     if (await chooseDoor(page, log)) return true;
   }
 
-  if (await page.locator('#destinyReader').isVisible().catch(() => false)) {
-    const paper = page.locator('#destinyPaper');
-    if (await paper.count()) await paper.evaluate(el => { el.scrollTop = el.scrollHeight; });
-    await sleep(100);
-    if (await clickFirst(page, ['#destinyControls button:not([disabled])'])) {
-      log.push('destiny control');
-      return true;
-    }
-  }
+  if (await progressDestinyReader(page, log)) return true;
 
   if (await clickFirst(page, ['#continueBtn:not([hidden])'])) {
     log.push('continue');
@@ -175,9 +189,7 @@ async function runDevice(device) {
   page.on('console', msg => { if (msg.type() === 'error') consoleErrors.push(msg.text()); });
   page.on('pageerror', err => consoleErrors.push(String(err)));
   page.on('requestfailed', req => requestFailures.push(`${req.method()} ${req.url()} :: ${req.failure()?.errorText || 'failed'}`));
-  page.on('response', response => {
-    if (response.status() >= 400) badResponses.push(`${response.status()} ${response.url()}`);
-  });
+  page.on('response', response => { if (response.status() >= 400) badResponses.push(`${response.status()} ${response.url()}`); });
 
   await page.goto('http://127.0.0.1:4173/index.html', { waitUntil: 'networkidle' });
   await page.evaluate(() => { localStorage.clear(); sessionStorage.clear(); });
@@ -186,12 +198,7 @@ async function runDevice(device) {
   const log = [];
   const states = [];
   const seenScenes = new Set();
-  const flags = {
-    birthDaySubmitted: false,
-    birthCompleteSeen: false,
-    birthAdvancedWithoutCover: false,
-    birthReturnedToCover: false
-  };
+  const flags = { birthDaySubmitted:false, birthCompleteSeen:false, birthAdvancedWithoutCover:false, birthReturnedToCover:false };
   let stalled = false;
   let brokenImage = false;
   let horizontalOverflow = false;
@@ -199,30 +206,17 @@ async function runDevice(device) {
 
   for (let step = 0; step < 700; step += 1) {
     const s = await snapshot(page);
-    states.push({
-      step,
-      mode:s.mode,
-      scene:s.scene,
-      title:s.title,
-      image:s.image.split('/').pop(),
-      imageComplete:s.imageComplete,
-      imageNatural:s.imageNatural,
-      overflowX:s.overflowX
-    });
+    states.push({ step, mode:s.mode, scene:s.scene, title:s.title, image:s.image.split('/').pop(), imageComplete:s.imageComplete, imageNatural:s.imageNatural, overflowX:s.overflowX });
     if (s.scene) seenScenes.add(s.scene);
 
-    if (s.overflowX) {
-      horizontalOverflow = true;
-      log.push(`horizontal overflow at ${s.scene || s.mode}`);
-    }
-
+    if (s.overflowX) { horizontalOverflow = true; log.push(`horizontal overflow at ${s.scene || s.mode}`); }
     const matchingBadImage = badResponses.find(entry => {
       const name = (s.imageAttr || s.image).split('/').pop();
       return name && entry.includes(name);
     });
-    if (matchingBadImage || (s.imageComplete && s.imageNatural[0] === 0 && matchingBadImage)) {
+    if (matchingBadImage) {
       brokenImage = true;
-      log.push(`broken image at ${s.scene || s.mode}: ${matchingBadImage || s.image}`);
+      log.push(`broken image at ${s.scene || s.mode}: ${matchingBadImage}`);
       break;
     }
 
@@ -231,9 +225,7 @@ async function runDevice(device) {
       log.push('BIRTH BUG: returned to cover after birthday submission');
       break;
     }
-    if (flags.birthCompleteSeen && s.mode !== 'cover' && s.scene !== previousScene) {
-      flags.birthAdvancedWithoutCover = true;
-    }
+    if (flags.birthCompleteSeen && s.mode !== 'cover' && s.scene !== previousScene) flags.birthAdvancedWithoutCover = true;
     previousScene = s.scene;
 
     const saved = await page.evaluate(() => {
@@ -263,7 +255,6 @@ async function runDevice(device) {
   const finalState = await page.evaluate(() => {
     try { return JSON.parse(localStorage.getItem('sakura-hidden-shrine-v58') || '{}'); } catch { return {}; }
   });
-
   await page.screenshot({ path: `qa-artifacts/${device.name}-final.png`, fullPage: true });
   fs.writeFileSync(`qa-artifacts/${device.name}-states.json`, JSON.stringify(states, null, 2));
 
@@ -285,7 +276,6 @@ async function runDevice(device) {
     badResponses,
     log
   };
-
   await context.close();
   return result;
 }
