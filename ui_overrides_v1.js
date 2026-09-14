@@ -1,13 +1,10 @@
 (() => {
   'use strict';
 
-  const SAVE_KEY = 'sakura-hidden-shrine-v58';
   const mobileQuery = window.matchMedia('(max-width: 720px)');
 
   // ---------------------------------------------------------------------------
-  // 命牒：可見捲動狀態＋閱讀保護
-  // Desktop 可在玩家仍靠近底部時跟隨新墨跡；Mobile 預設不自動把玩家拖走，
-  // 讓標題與前段文字能照自己的速度閱讀。
+  // 命牒：閱讀保護
   // ---------------------------------------------------------------------------
   const paper = document.getElementById('destinyPaper');
   const ink = document.getElementById('destinyInk');
@@ -59,11 +56,7 @@
     readerObserver.observe(reader, { attributes: true, attributeFilter: ['hidden', 'class'] });
 
     const inkObserver = new MutationObserver(followLatestInk);
-    inkObserver.observe(ink, {
-      childList: true,
-      subtree: true,
-      characterData: true
-    });
+    inkObserver.observe(ink, { childList: true, subtree: true, characterData: true });
 
     const handleViewportChange = () => {
       autoFollow = !mobileQuery.matches;
@@ -71,43 +64,23 @@
       updateFinalGate();
     };
     mobileQuery.addEventListener?.('change', handleViewportChange);
-    window.addEventListener('resize', () => {
-      updateScrollableState();
-      updateFinalGate();
-    }, { passive: true });
+    window.addEventListener('resize', handleViewportChange, { passive: true });
     updateScrollableState();
   }
 
   // ---------------------------------------------------------------------------
-  // 生辰年份相容修正：舊核心把年份鎖成 18～90 歲；正式規則只有「必須成年」。
-  // 另外攔下不存在的日期，錯一天只重填「日」，不把已輸入的年／月一起清掉。
+  // 生辰相容：正式規則只有「必須成年」，不設 90 歲上限。
+  // 核心目前仍以 90 年範圍驗證年份，因此舊年份只在提交瞬間轉成同閏年型態的代理年份，
+  // 畫面繼續顯示玩家真正輸入的年份。重要：絕不 reload，避免 intake 被重置回首頁。
   // ---------------------------------------------------------------------------
   const birthCompat = {
     realYear: null,
-    month: null,
-    day: null,
     surrogateYear: null,
-    pendingFinalize: false
+    month: null,
+    day: null
   };
 
   const isLeapYear = year => year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
-
-  const hash = text => {
-    let value = 2166136261;
-    for (let index = 0; index < text.length; index += 1) {
-      value ^= text.charCodeAt(index);
-      value = Math.imul(value, 16777619);
-    }
-    return value >>> 0;
-  };
-
-  const getSavedState = () => {
-    try {
-      return JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
-    } catch {
-      return null;
-    }
-  };
 
   const chooseSurrogateYear = realYear => {
     const nowYear = new Date().getFullYear();
@@ -129,23 +102,16 @@
     birthCompat.surrogateYear = chooseSurrogateYear(cached);
   };
 
-  const readCoinValue = (form, coin) => {
-    const text = form.querySelector(`.birth-coin[data-coin="${coin}"] small`)?.textContent?.trim();
-    const value = Number(text);
-    return Number.isInteger(value) ? value : null;
-  };
-
   const patchBirthVisual = () => {
     restoreBirthCache();
-    if (!birthCompat.realYear) return;
+    if (!birthCompat.realYear || !birthCompat.surrogateYear) return;
 
     const yearCoin = document.querySelector('.birth-coin[data-coin="year"] small');
-    if (yearCoin && birthCompat.surrogateYear && yearCoin.textContent.trim() === String(birthCompat.surrogateYear)) {
+    if (yearCoin && yearCoin.textContent.trim() === String(birthCompat.surrogateYear)) {
       yearCoin.textContent = String(birthCompat.realYear);
     }
 
     document.querySelectorAll('.beat-text').forEach(node => {
-      if (!birthCompat.surrogateYear) return;
       const text = node.textContent || '';
       if (text.includes(String(birthCompat.surrogateYear))) {
         node.textContent = text.replaceAll(String(birthCompat.surrogateYear), String(birthCompat.realYear));
@@ -156,6 +122,7 @@
   document.addEventListener('submit', event => {
     const form = event.target.closest?.('.birth-ritual');
     if (!form || form.classList.contains('birth-ritual--complete')) return;
+
     const input = form.querySelector('input[name="value"]');
     const activeCoin = form.querySelector('.birth-coin.is-active')?.dataset.coin;
     const note = form.querySelector('.form-note');
@@ -167,82 +134,66 @@
     if (activeCoin === 'year') {
       const nowYear = new Date().getFullYear();
       const latestAdultYear = nowYear - 18;
-      if (raw > latestAdultYear) {
+      if (raw > latestAdultYear || raw < 1) {
         event.preventDefault();
         event.stopImmediatePropagation();
-        if (note) note.textContent = '命館只替成年人開卷；請輸入已滿 18 歲的出生年份。';
+        if (note) note.textContent = raw > latestAdultYear
+          ? '命館只替成年人開卷；請輸入已滿 18 歲的出生年份。'
+          : '請輸入有效的出生年份。';
         input.focus();
         return;
       }
 
-      const oldLegacyMin = nowYear - 90;
-      if (raw < oldLegacyMin) {
+      const legacyMin = nowYear - 90;
+      if (raw < legacyMin) {
         birthCompat.realYear = raw;
         birthCompat.surrogateYear = chooseSurrogateYear(raw);
         sessionStorage.setItem('sakura-v58-real-birth-year', String(raw));
         input.min = '1';
         input.value = String(birthCompat.surrogateYear);
         requestAnimationFrame(patchBirthVisual);
+      } else {
+        birthCompat.realYear = null;
+        birthCompat.surrogateYear = null;
+        sessionStorage.removeItem('sakura-v58-real-birth-year');
       }
       return;
     }
 
     restoreBirthCache();
+
     if (activeCoin === 'month') {
       birthCompat.month = raw;
       return;
     }
 
     if (activeCoin === 'day') {
-      const realYear = birthCompat.realYear || readCoinValue(form, 'year');
-      const month = birthCompat.month || readCoinValue(form, 'month');
-      if (realYear && month) {
-        const date = new Date(realYear, month - 1, raw);
-        const valid = date.getFullYear() === realYear && date.getMonth() === month - 1 && date.getDate() === raw;
-        if (!valid) {
-          event.preventDefault();
-          event.stopImmediatePropagation();
-          if (note) note.textContent = '這一天不存在。前兩枚已經保留，只要重新輸入正確的日期。';
-          input.value = '';
-          input.focus();
-          return;
-        }
-      }
       birthCompat.day = raw;
-      birthCompat.pendingFinalize = Boolean(birthCompat.realYear);
+      if (!birthCompat.realYear || !birthCompat.month) return;
+
+      const date = new Date(birthCompat.realYear, birthCompat.month - 1, raw);
+      const valid = date.getFullYear() === birthCompat.realYear
+        && date.getMonth() === birthCompat.month - 1
+        && date.getDate() === raw;
+      if (!valid) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        if (note) note.textContent = '這一天不存在。前兩枚已保留，只要重新輸入正確的日期。';
+        input.value = '';
+        input.focus();
+      }
     }
   }, true);
 
-  const finalizeOldBirth = () => {
-    if (!birthCompat.pendingFinalize || !birthCompat.realYear || !birthCompat.month || !birthCompat.day) return false;
-    const saved = getSavedState();
-    if (!saved?.profile) return false;
-
-    const y = birthCompat.realYear;
-    const m = birthCompat.month;
-    const d = birthCompat.day;
-    const date = new Date(y, m - 1, d);
-    const valid = date.getFullYear() === y && date.getMonth() === m - 1 && date.getDate() === d;
-    const today = new Date();
-    let age = today.getFullYear() - y;
-    if (today.getMonth() + 1 < m || (today.getMonth() + 1 === m && today.getDate() < d)) age -= 1;
-    if (!valid || age < 18) return false;
-
-    saved.profile.fortuneSeed = hash(`${saved.profile.alias || ''}|${y}-${m}-${d}`);
-    localStorage.setItem(SAVE_KEY, JSON.stringify(saved));
-    birthCompat.pendingFinalize = false;
-    sessionStorage.removeItem('sakura-v58-real-birth-year');
-    return true;
-  };
-
+  // 完成生日後只清理相容快取，絕不重新整理頁面。
   document.addEventListener('click', event => {
-    restoreBirthCache();
-    if (!birthCompat.realYear || !birthCompat.pendingFinalize) return;
     const button = event.target.closest?.('.choice-button--story-lead');
     if (!button || !document.querySelector('.birth-ritual--complete')) return;
-    setTimeout(() => {
-      if (finalizeOldBirth()) location.reload();
-    }, 0);
+    sessionStorage.removeItem('sakura-v58-real-birth-year');
+    birthCompat.realYear = null;
+    birthCompat.surrogateYear = null;
+    birthCompat.month = null;
+    birthCompat.day = null;
   }, true);
 
   const birthObserver = new MutationObserver(() => {
@@ -254,9 +205,7 @@
   birthObserver.observe(document.body, { childList: true, subtree: true });
 
   // ---------------------------------------------------------------------------
-  // 真結流程：不再倒數自動跳劇終。
-  // 玩家先完整讀完總命牒；若命牒可捲動，只有滑到最後一段後終幕按鈕才會解鎖。
-  // 最後一次操作是「收下命牒・看見黎明」，點下後才進「天亮了。／櫻隱・終」。
+  // 真結流程：玩家完整讀完總命牒後，才解鎖一次具有戲劇意義的終幕操作。
   // ---------------------------------------------------------------------------
   if (controls && paper) {
     const finalLabel = '收下命牒・看見黎明';
@@ -293,7 +242,6 @@
       }
     };
 
-    // 只監看 controls 的直接子節點。按鈕內文字更新不會再反過來觸發自己。
     const controlObserver = new MutationObserver(() => requestAnimationFrame(updateFinalGate));
     controlObserver.observe(controls, { childList: true });
     paper.addEventListener('scroll', updateFinalGate, { passive: true });
@@ -301,7 +249,7 @@
   }
 
   // ---------------------------------------------------------------------------
-  // 手機功能選單：除了單字圖章，也提供完整功能名稱，第一次玩的玩家不用猜。
+  // 手機功能選單：單字圖章旁提供完整功能名稱。
   // ---------------------------------------------------------------------------
   const app = document.getElementById('app');
   const menu = document.getElementById('menuBtn');
@@ -319,8 +267,7 @@
 
     Object.entries(labels).forEach(([id, label]) => {
       const button = document.getElementById(id);
-      if (!button) return;
-      button.dataset.mobileLabel = label;
+      if (button) button.dataset.mobileLabel = label;
     });
 
     const syncMenuLabel = () => {
@@ -351,10 +298,9 @@
       closeMenu({ restoreFocus: true });
     });
 
-    const handleViewportChange = event => {
+    mobileQuery.addEventListener?.('change', event => {
       if (!event.matches) closeMenu();
-    };
-    mobileQuery.addEventListener?.('change', handleViewportChange);
+    });
 
     syncMenuLabel();
   }
