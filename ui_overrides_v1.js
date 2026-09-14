@@ -2,6 +2,8 @@
   'use strict';
 
   const mobileQuery = window.matchMedia('(max-width: 720px)');
+  const SAVE_KEY = 'sakura-hidden-shrine-v58';
+  const REAL_BIRTH_KEY = 'sakura-v58-real-birth-date';
 
   // ---------------------------------------------------------------------------
   // 命牒：閱讀保護
@@ -70,14 +72,31 @@
 
   // ---------------------------------------------------------------------------
   // 生辰相容：正式規則只有「必須成年」，不設 90 歲上限。
-  // 核心目前仍以 90 年範圍驗證年份，因此舊年份只在提交瞬間轉成同閏年型態的代理年份，
-  // 畫面繼續顯示玩家真正輸入的年份。重要：絕不 reload，避免 intake 被重置回首頁。
+  // 舊核心仍限制 90 年，因此舊年份只在提交瞬間使用同閏年型態的代理年份通過舊驗證；
+  // 真實生日會寫回存檔，fortuneSeed 也永遠以真實生日重算。
   // ---------------------------------------------------------------------------
   const birthCompat = {
     realYear: null,
     surrogateYear: null,
     month: null,
     day: null
+  };
+
+  const destinyMarks = [
+    { name: '水鏡命種', glyph: '澄', line: '先感覺，再替感覺尋找證據。' },
+    { name: '櫻木命種', glyph: '生', line: '擅長讓關係與事情延續，也容易多撐一段。' },
+    { name: '狐火命種', glyph: '燄', line: '能在強烈裡迅速決定，必須留意退潮後還剩什麼。' },
+    { name: '玄金命種', glyph: '刃', line: '會追問規則與真相，答案清楚後要記得落刀。' },
+    { name: '門土命種', glyph: '守', line: '能承接、能守住，真正的課題是知道何時關門。' }
+  ];
+
+  const hash = text => {
+    let value = 2166136261;
+    for (let i = 0; i < text.length; i += 1) {
+      value ^= text.charCodeAt(i);
+      value = Math.imul(value, 16777619);
+    }
+    return value >>> 0;
   };
 
   const isLeapYear = year => year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
@@ -94,17 +113,115 @@
     return min;
   };
 
+  const readSavedState = () => {
+    try {
+      return JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
+    } catch {
+      return null;
+    }
+  };
+
+  const readCachedBirth = () => {
+    try {
+      const cached = JSON.parse(sessionStorage.getItem(REAL_BIRTH_KEY) || 'null');
+      if (cached && Number.isInteger(cached.year)) return cached;
+    } catch {}
+    const saved = readSavedState();
+    const birth = saved?.profile?.birth;
+    if (birth && Number.isInteger(birth.year)) return birth;
+    return null;
+  };
+
+  const cacheBirth = () => {
+    if (!Number.isInteger(birthCompat.realYear)) return;
+    const birth = {
+      year: birthCompat.realYear,
+      month: Number.isInteger(birthCompat.month) ? birthCompat.month : null,
+      day: Number.isInteger(birthCompat.day) ? birthCompat.day : null
+    };
+    sessionStorage.setItem(REAL_BIRTH_KEY, JSON.stringify(birth));
+  };
+
   const restoreBirthCache = () => {
-    if (birthCompat.realYear) return;
-    const cached = Number(sessionStorage.getItem('sakura-v58-real-birth-year'));
-    if (!Number.isInteger(cached)) return;
-    birthCompat.realYear = cached;
-    birthCompat.surrogateYear = chooseSurrogateYear(cached);
+    if (Number.isInteger(birthCompat.realYear)) return;
+    const cached = readCachedBirth();
+    if (!cached) return;
+    birthCompat.realYear = cached.year;
+    birthCompat.surrogateYear = chooseSurrogateYear(cached.year);
+    birthCompat.month = Number.isInteger(cached.month) ? cached.month : null;
+    birthCompat.day = Number.isInteger(cached.day) ? cached.day : null;
+  };
+
+  const validBirth = birth => {
+    if (!birth || !Number.isInteger(birth.year) || !Number.isInteger(birth.month) || !Number.isInteger(birth.day)) return false;
+    const date = new Date(birth.year, birth.month - 1, birth.day);
+    return date.getFullYear() === birth.year && date.getMonth() === birth.month - 1 && date.getDate() === birth.day;
+  };
+
+  const calculateTrueSeed = (state, birth) => {
+    if (!validBirth(birth)) return null;
+    const alias = String(state?.profile?.alias || '').trim();
+    if (!alias) return null;
+    let seed = hash(`${alias}|${birth.year}-${birth.month}-${birth.day}`);
+    const period = state?.profile?.period;
+    if (period) seed = hash(`${seed}|${period}`);
+    const omen = state?.profile?.omen;
+    if (omen) seed = hash(`${seed}|${omen}`);
+    return seed;
+  };
+
+  const rewriteSavedState = raw => {
+    try {
+      const state = JSON.parse(raw);
+      if (!state || typeof state !== 'object') return raw;
+      const birth = readCachedBirth();
+      if (!validBirth(birth)) return raw;
+      state.profile = { ...(state.profile || {}), birth: { ...birth } };
+      const seed = calculateTrueSeed(state, birth);
+      if (Number.isInteger(seed)) state.profile.fortuneSeed = seed;
+      return JSON.stringify(state);
+    } catch {
+      return raw;
+    }
+  };
+
+  // 所有後續核心 save 都會保留真生日 seed，避免代理年份再次覆蓋。
+  const nativeSetItem = Storage.prototype.setItem;
+  Storage.prototype.setItem = function(key, value) {
+    if (this === localStorage && key === SAVE_KEY) {
+      return nativeSetItem.call(this, key, rewriteSavedState(String(value)));
+    }
+    return nativeSetItem.call(this, key, value);
+  };
+
+  const trueDestinyMark = () => {
+    const saved = readSavedState();
+    const birth = saved?.profile?.birth || readCachedBirth();
+    const seed = calculateTrueSeed(saved, birth);
+    return Number.isInteger(seed) ? destinyMarks[seed % destinyMarks.length] : null;
+  };
+
+  const patchDestinyMarkVisuals = () => {
+    const mark = trueDestinyMark();
+    if (!mark) return;
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(node => {
+      let text = node.nodeValue || '';
+      let next = text;
+      destinyMarks.forEach(old => {
+        next = next
+          .replaceAll(`${old.name}｜${old.line}`, `${mark.name}｜${mark.line}`)
+          .replaceAll(`${old.name}・${old.line}`, `${mark.name}・${mark.line}`);
+      });
+      if (next !== text) node.nodeValue = next;
+    });
   };
 
   const patchBirthVisual = () => {
     restoreBirthCache();
-    if (!birthCompat.realYear || !birthCompat.surrogateYear) return;
+    if (!Number.isInteger(birthCompat.realYear) || !Number.isInteger(birthCompat.surrogateYear)) return;
 
     const yearCoin = document.querySelector('.birth-coin[data-coin="year"] small');
     if (yearCoin && yearCoin.textContent.trim() === String(birthCompat.surrogateYear)) {
@@ -144,18 +261,17 @@
         return;
       }
 
+      birthCompat.realYear = raw;
+      birthCompat.surrogateYear = chooseSurrogateYear(raw);
+      birthCompat.month = null;
+      birthCompat.day = null;
+      cacheBirth();
+
       const legacyMin = nowYear - 90;
       if (raw < legacyMin) {
-        birthCompat.realYear = raw;
-        birthCompat.surrogateYear = chooseSurrogateYear(raw);
-        sessionStorage.setItem('sakura-v58-real-birth-year', String(raw));
         input.min = '1';
         input.value = String(birthCompat.surrogateYear);
         requestAnimationFrame(patchBirthVisual);
-      } else {
-        birthCompat.realYear = null;
-        birthCompat.surrogateYear = null;
-        sessionStorage.removeItem('sakura-v58-real-birth-year');
       }
       return;
     }
@@ -164,12 +280,14 @@
 
     if (activeCoin === 'month') {
       birthCompat.month = raw;
+      cacheBirth();
       return;
     }
 
     if (activeCoin === 'day') {
       birthCompat.day = raw;
-      if (!birthCompat.realYear || !birthCompat.month) return;
+      cacheBirth();
+      if (!Number.isInteger(birthCompat.realYear) || !Number.isInteger(birthCompat.month)) return;
 
       const date = new Date(birthCompat.realYear, birthCompat.month - 1, raw);
       const valid = date.getFullYear() === birthCompat.realYear
@@ -180,20 +298,26 @@
         event.stopImmediatePropagation();
         if (note) note.textContent = '這一天不存在。前兩枚已保留，只要重新輸入正確的日期。';
         input.value = '';
+        birthCompat.day = null;
+        cacheBirth();
         input.focus();
       }
     }
   }, true);
 
-  // 完成生日後只清理相容快取，絕不重新整理頁面。
+  // 完成生日後讓核心先 save；下一個 event loop 再清 session 快取。
+  // 真生日已經被 Storage 攔截器寫進 profile.birth，所以不會遺失。
   document.addEventListener('click', event => {
     const button = event.target.closest?.('.choice-button--story-lead');
     if (!button || !document.querySelector('.birth-ritual--complete')) return;
-    sessionStorage.removeItem('sakura-v58-real-birth-year');
-    birthCompat.realYear = null;
-    birthCompat.surrogateYear = null;
-    birthCompat.month = null;
-    birthCompat.day = null;
+    setTimeout(() => {
+      sessionStorage.removeItem(REAL_BIRTH_KEY);
+      birthCompat.realYear = null;
+      birthCompat.surrogateYear = null;
+      birthCompat.month = null;
+      birthCompat.day = null;
+      patchDestinyMarkVisuals();
+    }, 0);
   }, true);
 
   const birthObserver = new MutationObserver(() => {
@@ -201,8 +325,9 @@
       ?.closest('.birth-ritual')?.querySelector('input[name="value"]');
     if (yearInput) yearInput.min = '1';
     patchBirthVisual();
+    patchDestinyMarkVisuals();
   });
-  birthObserver.observe(document.body, { childList: true, subtree: true });
+  birthObserver.observe(document.body, { childList: true, subtree: true, characterData: true });
 
   // ---------------------------------------------------------------------------
   // 真結流程：玩家完整讀完總命牒後，才解鎖一次具有戲劇意義的終幕操作。
