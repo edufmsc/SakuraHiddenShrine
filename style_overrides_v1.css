@@ -25,6 +25,21 @@
   margin-bottom: 0 !important;
 }
 
+/* JS 本身已逐字寫入；舊 CSS 再用 clip-path 揭字會造成「文字像被切掉」的假裁切。
+   保留墨色乾燥感，取消第二層裁切動畫。 */
+.destiny-ink-line.is-writing,
+.destiny-ink-line.is-writing p,
+.destiny-ink-line.is-writing small {
+  overflow: visible !important;
+  clip-path: none !important;
+  -webkit-clip-path: none !important;
+}
+
+.destiny-ink-line.is-writing p,
+.destiny-ink-line.is-writing small {
+  animation: destiny-ink-dry .48s ease forwards !important;
+}
+
 .destiny-ink-line.is-final p {
   font-size: clamp(17px, 1.28vw, 21px) !important;
   line-height: 1.62 !important;
@@ -170,10 +185,11 @@
   .app[data-scene="forbidden.last-proof"] .choice-button {
     min-height: 78px !important;
     padding: 12px 14px !important;
+    border: 1px solid rgba(var(--accent-rgb), .32) !important;
     border-radius: 8px 18px 8px 18px !important;
     background:
       linear-gradient(135deg, rgba(var(--accent-rgb), .12), transparent 62%),
-      rgba(7, 4, 9, .82) !important;
+      rgba(7, 4, 9, .70) !important;
   }
 
   .app[data-scene="forbidden.pattern"] .choice-button strong,
@@ -184,8 +200,26 @@
     font-size: clamp(16px, 1.04vw, 19px) !important;
   }
 
-  /* 禁卷與一般故事頁：不對整張背景加毛玻璃，只保留局部暗度。 */
-  .app[data-scene^="forbidden."] .scene-image,
+  /* V51 會在 panel-scroll 上放一整片黑色漸層，禁卷近身圖因此像被霧面貼膜。
+     禁卷改為完全透明，閱讀靠文字陰影與細邊，不再犧牲圖片。 */
+  .app[data-scene^="forbidden."] .story-panel .panel-scroll,
+  .app[data-scene^="forbidden."] .story-panel.safe-left .panel-scroll,
+  .app[data-scene^="forbidden."] .story-panel.safe-left-top .panel-scroll,
+  .app[data-scene^="forbidden."] .story-panel.safe-right .panel-scroll,
+  .app[data-scene^="forbidden."] .story-panel.safe-right-top .panel-scroll {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .app[data-scene^="forbidden."] .scene-image {
+    filter: saturate(1.055) contrast(1.04) brightness(1.01) !important;
+  }
+
+  .app[data-scene^="forbidden."] .scene-shade {
+    opacity: .45 !important;
+  }
+
   .app[data-scene^="love."] .scene-image,
   .app[data-scene^="career."] .scene-image,
   .app[data-scene^="life."] .scene-image,
@@ -193,22 +227,14 @@
     filter: saturate(1.04) contrast(1.035) !important;
   }
 
-  .app[data-scene^="forbidden."] .story-panel,
-  .app[data-scene^="forbidden."] .panel-scroll {
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
+  /* 禁卷命牒右側九尾不再壓暗成霧面。 */
+  .destiny-reader--forbidden .destiny-reader__scribe img {
+    filter: saturate(1.02) contrast(1.04) brightness(.98) !important;
   }
-
-  .app[data-scene^="forbidden."] .story-panel::before,
-  .app[data-scene^="forbidden."] .panel-scroll::before,
-  .app[data-scene^="forbidden."] .panel-scroll::after {
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    filter: none !important;
-  }
-
-  .app[data-scene^="forbidden."] .scene-shade {
-    opacity: .72 !important;
+  .destiny-reader--forbidden .destiny-reader__scribe-shade {
+    background:
+      linear-gradient(90deg, rgba(9,5,9,.30) 0%, transparent 14%),
+      linear-gradient(0deg, rgba(7,4,7,.34) 0%, transparent 28%) !important;
   }
 }
 
@@ -341,6 +367,7 @@
     max-height: none !important;
     -webkit-line-clamp: unset !important;
     display: block !important;
+    clip-path: none !important;
   }
   .destiny-ink-line.is-final p,
   .destiny-paper.is-compact .destiny-ink-line.is-final p,
