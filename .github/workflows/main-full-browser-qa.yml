@@ -1,0 +1,70 @@
+name: Main Full Browser QA
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/main-full-browser-qa.yml'
+      - 'qa/full-browser-qa.mjs'
+      - 'index.html'
+      - 'story.js'
+      - 'story_overrides_v1.js'
+      - 'pixel_overrides_v1.js'
+      - 'interaction_story_overrides_v1.js'
+      - 'interaction_ui_overrides_v1.js'
+      - 'script.js'
+      - 'style.css'
+      - 'style_overrides_v1.css'
+      - 'ui_overrides_v1.js'
+      - 'assets/images/**'
+
+permissions:
+  contents: write
+
+jobs:
+  browser-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Playwright
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install --silent playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Run full Desktop and Mobile QA
+        run: node qa/full-browser-qa.mjs
+
+      - name: Persist QA report
+        if: always()
+        run: |
+          if [ -f qa-artifacts/report.md ] && [ -f qa-artifacts/report.json ]; then
+            mkdir -p scene-lock-v1/runtime-qa
+            cp qa-artifacts/report.md scene-lock-v1/runtime-qa/MAIN_FULL_BROWSER_QA.md
+            cp qa-artifacts/report.json scene-lock-v1/runtime-qa/MAIN_FULL_BROWSER_QA.json
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add scene-lock-v1/runtime-qa/MAIN_FULL_BROWSER_QA.md scene-lock-v1/runtime-qa/MAIN_FULL_BROWSER_QA.json
+            if ! git diff --cached --quiet; then
+              git commit -m 'test: record main full browser QA'
+              git push origin HEAD:main
+            fi
+          fi
+
+      - name: Upload QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: main-full-browser-qa
+          path: qa-artifacts
+          if-no-files-found: error
+          retention-days: 14
