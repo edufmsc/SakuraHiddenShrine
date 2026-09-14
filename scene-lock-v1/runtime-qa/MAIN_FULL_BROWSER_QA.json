@@ -1,0 +1,47 @@
+{
+  "generatedAt": "2026-09-14T13:32:17.546Z",
+  "runs": [
+    {
+      "device": "desktop",
+      "viewport": [
+        1440,
+        900
+      ],
+      "stalled": false,
+      "imageFailure": true,
+      "completedRoutes": [],
+      "finaleCompleted": false,
+      "finalDawnSeen": false,
+      "seenSceneCount": 1,
+      "seenScenes": [
+        "opening-rain"
+      ],
+      "consoleErrors": [],
+      "requestFailures": [],
+      "log": [
+        "image failure at opening-rain: "
+      ]
+    },
+    {
+      "device": "mobile",
+      "viewport": [
+        390,
+        844
+      ],
+      "stalled": false,
+      "imageFailure": true,
+      "completedRoutes": [],
+      "finaleCompleted": false,
+      "finalDawnSeen": false,
+      "seenSceneCount": 1,
+      "seenScenes": [
+        "opening-rain"
+      ],
+      "consoleErrors": [],
+      "requestFailures": [],
+      "log": [
+        "image failure at opening-rain: "
+      ]
+    }
+  ]
+}
