@@ -40,6 +40,7 @@ jobs:
           npm init -y >/dev/null 2>&1
           npm install --silent playwright@1.55.0
           npx playwright install --with-deps chromium
+          ln -s "$PWD/node_modules" /tmp/node_modules
 
       - name: Create full browser QA runner
         run: |
@@ -59,7 +60,6 @@ jobs:
           fs.mkdirSync('stage2-artifacts', { recursive: true });
           const report = { generatedAt: new Date().toISOString(), runs: [] };
           const browser = await chromium.launch({ headless: true });
-
           const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
           async function snapshot(page) {
@@ -67,9 +67,6 @@ jobs:
               const app = document.querySelector('#app');
               const img = document.querySelector('#sceneImage');
               const visible = el => !!el && !el.hidden && getComputedStyle(el).display !== 'none' && getComputedStyle(el).visibility !== 'hidden';
-              const buttons = [...document.querySelectorAll('button')]
-                .filter(visible)
-                .map(b => ({ text: (b.textContent || '').trim(), disabled: b.disabled, id: b.id, cls: b.className }));
               return {
                 mode: app?.dataset.mode || '',
                 scene: app?.dataset.scene || '',
@@ -78,12 +75,9 @@ jobs:
                 image: img?.currentSrc || img?.src || '',
                 imageNatural: [img?.naturalWidth || 0, img?.naturalHeight || 0],
                 overflowX: document.documentElement.scrollWidth > innerWidth + 2,
-                buttons,
                 readerVisible: visible(document.querySelector('#destinyReader')),
                 doorVisible: visible(document.querySelector('#doorStage')),
-                missingImages: [...document.images].filter(i => i.complete && !i.naturalWidth).map(i => i.src),
-                scrollText: document.querySelector('#destinyPaper')?.innerText?.trim() || '',
-                bodyText: document.body.innerText.slice(0, 1800)
+                missingImages: [...document.images].filter(i => i.complete && !i.naturalWidth).map(i => i.src)
               };
             });
           }
@@ -96,7 +90,7 @@ jobs:
                 const item = items.nth(i);
                 if (await item.isVisible().catch(() => false) && await item.isEnabled().catch(() => false)) {
                   await item.click({ timeout: 2500 }).catch(() => {});
-                  await sleep(80);
+                  await sleep(90);
                   return true;
                 }
               }
@@ -108,22 +102,20 @@ jobs:
             const alias = page.locator('input[name="alias"]:visible');
             if (await alias.count()) {
               await alias.fill('測試者');
-              const form = alias.locator('xpath=ancestor::form');
-              await form.evaluate(form => form.requestSubmit());
+              await alias.locator('xpath=ancestor::form').evaluate(form => form.requestSubmit());
               log.push('filled alias');
-              await sleep(80);
+              await sleep(90);
               return true;
             }
 
             const birth = page.locator('.birth-ritual input[name="value"]:visible');
             if (await birth.count()) {
               const active = await page.locator('.birth-coin.is-active').getAttribute('data-coin').catch(() => '');
-              const value = active === 'year' ? '1988' : active === 'month' ? '8' : '18';
+              const value = active === 'year' ? '1877' : active === 'month' ? '8' : '18';
               await birth.fill(value);
-              const form = birth.locator('xpath=ancestor::form');
-              await form.evaluate(form => form.requestSubmit());
+              await birth.locator('xpath=ancestor::form').evaluate(form => form.requestSubmit());
               log.push(`filled birth ${active}=${value}`);
-              await sleep(80);
+              await sleep(90);
               return true;
             }
             return false;
@@ -133,8 +125,7 @@ jobs:
             const state = await page.evaluate(() => {
               try { return JSON.parse(localStorage.getItem('sakura-hidden-shrine-v58') || '{}'); } catch { return {}; }
             });
-            const order = ['love','career','life','forbidden'];
-            for (const id of order) {
+            for (const id of ['love','career','life','forbidden']) {
               if (!state.routes?.[id]?.completed) {
                 const btn = page.locator(`[data-route-target="${id}"]`);
                 if (await btn.isVisible().catch(() => false)) {
@@ -167,7 +158,7 @@ jobs:
             if (await reader.isVisible().catch(() => false)) {
               const paper = page.locator('#destinyPaper');
               if (await paper.count()) await paper.evaluate(el => { el.scrollTop = el.scrollHeight; });
-              await sleep(40);
+              await sleep(50);
               if (await clickFirst(page, ['#destinyControls button:not([disabled])'])) {
                 log.push('destiny control');
                 return true;
@@ -178,17 +169,14 @@ jobs:
               log.push('continue');
               return true;
             }
-
             if (await clickFirst(page, ['#choices .choice-button--primary', '#choices .choice-button', '#choices button'])) {
               log.push('choice');
               return true;
             }
-
             if (await clickFirst(page, ['#finalDoorBtn:not([hidden])'])) {
               log.push('final door direct');
               return true;
             }
-
             return false;
           }
 
@@ -202,21 +190,23 @@ jobs:
             page.on('requestfailed', req => requestFailures.push(`${req.method()} ${req.url()} :: ${req.failure()?.errorText || 'failed'}`));
 
             await page.goto('http://127.0.0.1:4173/index.html', { waitUntil: 'networkidle' });
-            await page.evaluate(() => { localStorage.clear(); sessionStorage.clear(); location.reload(); });
-            await page.waitForLoadState('networkidle');
+            await page.evaluate(() => { localStorage.clear(); sessionStorage.clear(); });
+            await page.reload({ waitUntil: 'networkidle' });
 
             const log = [];
             const states = [];
             const seenScenes = new Set();
             let stalled = false;
+            let imageFailure = false;
 
-            for (let step = 0; step < 420; step += 1) {
+            for (let step = 0; step < 520; step += 1) {
               const s = await snapshot(page);
               states.push({ step, mode:s.mode, scene:s.scene, title:s.title, image:s.image.split('/').pop(), overflowX:s.overflowX });
               if (s.scene) seenScenes.add(s.scene);
 
               if (s.imageNatural[0] === 0 || s.missingImages.length) {
-                log.push(`image failure at ${s.scene || s.mode}`);
+                imageFailure = true;
+                log.push(`image failure at ${s.scene || s.mode}: ${s.missingImages.join(', ')}`);
                 break;
               }
               if (s.overflowX) log.push(`horizontal overflow at ${s.scene || s.mode}`);
@@ -231,15 +221,18 @@ jobs:
 
               const progressed = await progressOne(page, log);
               if (!progressed) {
-                // Some story leads are rendered as generic buttons outside #choices.
-                const fallback = await clickFirst(page, ['.story-panel button:not([hidden]):not([disabled])', '.final-coda button:not([disabled])']);
+                const fallback = await clickFirst(page, [
+                  '.story-panel button:not([hidden]):not([disabled])',
+                  '.final-coda button:not([disabled])',
+                  '#doorStage button:not([hidden]):not([disabled])'
+                ]);
                 if (!fallback) {
                   stalled = true;
                   log.push(`STALLED at mode=${s.mode} scene=${s.scene} title=${s.title}`);
                   break;
                 }
               }
-              await sleep(70);
+              await sleep(80);
             }
 
             const finalState = await page.evaluate(() => {
@@ -254,6 +247,7 @@ jobs:
               device: device.name,
               viewport: [device.width, device.height],
               stalled,
+              imageFailure,
               completedRoutes,
               finaleCompleted: Boolean(finalState.finale?.completed),
               finalDawnSeen: Boolean(finalState.flags?.finalDawnSeen),
@@ -263,7 +257,6 @@ jobs:
               requestFailures,
               log
             };
-
             await context.close();
             return result;
           }
@@ -277,13 +270,14 @@ jobs:
           for (const run of report.runs) {
             md.push(`## ${run.device}`);
             md.push(`- Stalled: ${run.stalled}`);
+            md.push(`- Image failure: ${run.imageFailure}`);
             md.push(`- Completed routes: ${run.completedRoutes.join(', ') || 'none'}`);
             md.push(`- Finale completed: ${run.finaleCompleted}`);
             md.push(`- Dawn seen: ${run.finalDawnSeen}`);
             md.push(`- Scenes reached: ${run.seenSceneCount}`);
             md.push(`- Console errors: ${run.consoleErrors.length}`);
             md.push(`- Failed requests: ${run.requestFailures.length}`);
-            md.push(`- Last log: ${run.log.slice(-5).join(' | ')}`);
+            md.push(`- Last log: ${run.log.slice(-8).join(' | ')}`);
             md.push('');
           }
           fs.writeFileSync('stage2-artifacts/report.md', md.join('\n'));
@@ -291,6 +285,7 @@ jobs:
           const failures = [];
           for (const run of report.runs) {
             if (run.stalled) failures.push(`${run.device}: flow stalled`);
+            if (run.imageFailure) failures.push(`${run.device}: image failed`);
             if (run.completedRoutes.length !== 4) failures.push(`${run.device}: only ${run.completedRoutes.length}/4 routes completed`);
             if (!run.finaleCompleted) failures.push(`${run.device}: finale not completed`);
             if (!run.finalDawnSeen) failures.push(`${run.device}: dawn not reached`);
