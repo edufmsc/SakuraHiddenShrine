@@ -18,7 +18,9 @@
 
   const cloneArt = (base, patch = {}) => ({ ...(base || {}), ...patch });
 
-  // 緣卷沉默：把畫面語意固定在「玩家沒有伸手，另一端是否自行接回」。
+  // ---------------------------------------------------------------------------
+  // 緣卷｜文圖動作一致
+  // ---------------------------------------------------------------------------
   {
     const scene = findRouteScene('love', 'love.silence');
     if (scene) {
@@ -30,22 +32,54 @@
     }
   }
 
-  // 緣卷近身：桌機原本就有三張不同反應圖；手機先停止三個選項共用同一張。
-  // 目前沒有三張全新的正式 9:16，因此先使用 Repo 內既有、語意相符的各自畫面，
-  // 後續若補正式直式圖，只需替換 mobile 路徑，不必再改流程。
+  // 原本選項寫「停在唇前」，但現有反應圖的手勢落在眼下／臉側。
+  // 不再硬把錯圖叫成唇前：改成「停在臉前、不碰」，保留真正的行為差異。
   {
     const scene = findRouteScene('love', 'love.face');
     const touch = findChoice(scene, 'touch-cheek');
     const pause = findChoice(scene, 'stop-before-lips');
-    if (touch?.reactionArt) {
-      touch.reactionArt.mobile = 'assets/images/active/01_love/love_face_touch.webp';
-      touch.reactionArt.mobileFocus = '50% 24%';
-      touch.reactionArt.galleryTitle = '臉頰回應';
+    const withdraw = findChoice(scene, 'withdraw-hand');
+
+    if (scene) {
+      scene.kicker = '緣之卷・臉前一寸';
+      scene.title = '她把距離交給你。';
+      scene.beats = [
+        { speaker: 'narrator', text: '她牽起你的手，停在自己臉前。最後那一寸，她沒有替你完成。' },
+        { speaker: 'fox', text: '「別先討好我。碰、停、收回——你第一個動作，比答案誠實。」' }
+      ];
     }
-    if (pause?.reactionArt) {
-      pause.reactionArt.mobile = 'assets/images/active/01_love/LOVE_lips_mobile.webp';
-      pause.reactionArt.mobileFocus = '50% 22%';
-      pause.reactionArt.galleryTitle = '唇前停手';
+
+    if (touch) {
+      touch.label = '指尖碰她的臉頰';
+      touch.hint = '直接碰到，確認她有沒有退開。';
+      touch.reaction = [
+        { speaker: 'narrator', text: '指腹碰上她的臉頰。她沒有迎上來，只把重量很輕地留在那裡。' },
+        { speaker: 'fox', text: '「想確認就碰。但別把我沒有躲，提前翻譯成永遠。」' }
+      ];
+      if (touch.reactionArt) {
+        touch.reactionArt.mobile = 'assets/images/active/01_love/love_face_touch.webp';
+        touch.reactionArt.mobileFocus = '50% 24%';
+        touch.reactionArt.galleryTitle = '臉頰回應';
+      }
+    }
+
+    if (pause) {
+      pause.label = '停在她臉前，不碰';
+      pause.hint = '承認想靠近，但把最後一寸留給她。';
+      pause.reaction = [
+        { speaker: 'narrator', text: '你的手停在她眼下與臉側前方，沒有碰上去。她也沒有追著你的指尖靠近。' },
+        { speaker: 'fox', text: '「會停，不代表退縮。你是在看——另一個人會不會也走自己的那一步。」' }
+      ];
+      if (pause.reactionArt) {
+        pause.reactionArt.mobile = 'assets/images/active/01_love/LOVE_lips_mobile.webp';
+        pause.reactionArt.mobileFocus = '50% 22%';
+        pause.reactionArt.galleryTitle = '臉前停手';
+      }
+    }
+
+    if (withdraw) {
+      withdraw.label = '碰到以前，把手收回';
+      withdraw.hint = '不讓心跳替你把靠近寫成承諾。';
     }
   }
 
@@ -62,8 +96,83 @@
     }
   }
 
-  // 第五卷反證：先保留第五卷專屬四痕畫面，但標記為待補獨立反證圖。
-  // 不再退回命卷鏡室，避免跨卷視覺倒退。
+  // ---------------------------------------------------------------------------
+  // 禁卷｜把心理問卷感改成「四象判讀」，所有四選題桌機固定 2×2。
+  // ---------------------------------------------------------------------------
+  ['forbidden.pattern', 'forbidden.bait', 'forbidden.mask', 'forbidden.threat', 'forbidden.last-proof'].forEach(sceneId => {
+    const scene = findRouteScene('forbidden', sceneId);
+    if (scene?.choices?.length === 4) scene.layout = 'split';
+  });
+
+  {
+    const scene = findRouteScene('forbidden', 'forbidden.pattern');
+    if (scene) {
+      scene.kicker = '禁之卷・四象認痕';
+      scene.title = '哪一道命痕，總會換個人再出現？';
+      scene.beats = [
+        { speaker: 'narrator', text: '不同的名字在四道門後輪流轉身。九尾沒有問誰傷你最深，只把重複的動作留在燈下。' },
+        { speaker: 'fox', text: '「禁卷不抓兇手，只認重演。選你最熟的那一象。」' }
+      ];
+    }
+  }
+
+  {
+    const scene = findRouteScene('forbidden', 'forbidden.bait');
+    if (scene) {
+      scene.kicker = '禁之卷・近火四象';
+      scene.title = '哪一種命感，最容易讓你把警報聽成心跳？';
+      scene.beats = [
+        { speaker: 'narrator', text: '九尾靠近，卻刻意停在不碰你的距離。這一問不算你喜歡誰，只算哪種感覺最容易偷走判斷。' },
+        { speaker: 'fox', text: '「強烈不是凶兆，依賴也不是。真正要看的，是你在哪一種感覺裡最容易把選擇權交出去。」' },
+        { speaker: 'oracle', text: '禁判｜選最像你過去的，不選最好聽的。' }
+      ];
+
+      const patches = {
+        desired: {
+          label: '欲象｜被強烈渴望',
+          hint: '強度一高，你就暫時不懷疑自己。',
+          reaction: [{ speaker: 'fox', text: '「禁判・欲象。被要得很急，和被放得很穩，是兩種命。」' }]
+        },
+        needed: {
+          label: '需象｜被需要、被依賴',
+          hint: '有用，讓你覺得自己不會被丟下。',
+          reaction: [{ speaker: 'fox', text: '「禁判・需象。若靠近只在你供應時存在，它要的可能是功能，不是你。」' }]
+        },
+        mystery: {
+          label: '迷象｜若即若離',
+          hint: '不確定讓注意力被綁得更緊。',
+          reaction: [{ speaker: 'fox', text: '「禁判・迷象。焦慮最像心動的時候，也最容易把你留在門口。」' }]
+        },
+        rescue: {
+          label: '救象｜只有我懂對方',
+          hint: '拯救感讓不平衡看起來像深情。',
+          reaction: [{ speaker: 'fox', text: '「禁判・救象。理解不是無限責任，更不是拿自己去填別人的缺口。」' }]
+        }
+      };
+      Object.entries(patches).forEach(([id, patch]) => {
+        const item = findChoice(scene, id);
+        if (item) Object.assign(item, patch);
+      });
+    }
+  }
+
+  // 禁卷判讀畫面不需要「霧化審判室」感；保持正式結果圖清晰，文字只靠局部暗部閱讀。
+  {
+    const scene = findRouteScene('forbidden', 'forbidden.result');
+    if (scene?.art) {
+      Object.assign(scene.art, {
+        side: 'left-top',
+        mobileSide: 'bottom',
+        desktopFocus: '50% 50%',
+        mobileFocus: '50% 34%',
+        galleryTitle: '禁卷・九尾判讀'
+      });
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // 第五卷
+  // ---------------------------------------------------------------------------
   {
     const scene = findFinaleScene('finale.cross');
     if (scene?.art) {
@@ -79,9 +188,7 @@
     }
   }
 
-  // 緣卷封線：不再讓三個選項只是同一張圖換焦點。
-  // 「鬆線」改用放手/續線驗證圖；「剪斷」改用空線圖；「留在門環」才保留儀式主圖。
-  // 三個選項至少會出現三種不同視覺語意，不再造成「我明明選了不同選項但畫面沒變」。
+  // 緣卷封線：三個選擇至少使用三種不同視覺語意。
   {
     const scene = findRouteScene('love', 'love.ritual');
     if (scene?.art && Array.isArray(scene.choices)) {
@@ -125,6 +232,7 @@
       scene.beats = [
         { speaker: 'narrator', text: '四卷殘痕在她身前合成第五印。狐火猛地亮起，像在催你立刻把手按下去。' },
         { speaker: 'fox', text: '「別碰。」' },
+        { speaker: 'oracle', text: '真命判｜這一問不看你救不救她，只看你能不能在最想立刻做點什麼時，仍保留自己的手。' },
         { speaker: 'narrator', text: '她自己退了半步。這一次，命館不替你決定要不要靠近。' }
       ];
       scene.choices = [
@@ -158,7 +266,7 @@
     }
   }
 
-  // Finale 三分支使用 Repo 內確實存在的資產，並讓三條路真的留下不同後果。
+  // Finale 三分支真正留下不同後果。
   {
     const endings = STORY.finale.endings || {};
     if (endings.complete) {
@@ -199,9 +307,7 @@
     }
   }
 
-  // 原本三種最終選擇反應完都會被迫進入同一個「九尾消失」場景，
-  // 造成 complete / scroll-only 也像 refuse 一樣被硬收成同一結局。
-  // 移除這個共用 withdrawal，三條反應完成後直接進總命牒；差異保留在玩家真正做出的選擇裡。
+  // 移除會把三個最終選擇強迫收成同一個「九尾消失」的共用 withdrawal。
   {
     const scenes = STORY.finale.scenes;
     const index = scenes.findIndex(scene => scene?.id === 'finale.withdrawal');
@@ -210,18 +316,19 @@
 
   STORY.sceneLockV1 = {
     ...(STORY.sceneLockV1 || {}),
-    interactionRevision: '2026-08-21-a',
+    interactionRevision: '2026-09-14-a',
     interactionChanges: [
-      'love.silence.semantic-copy-lock',
-      'love.face.mobile-reactions-separated',
+      'love.face.action-copy-aligned-to-art',
+      'love.face.no-lips-mismatch',
       'career.borrowed.semantic-copy-lock',
-      'finale.cross.fifth-volume-art-needs-dedicated',
+      'forbidden.four-choice-scenes-grid-layout',
+      'forbidden.bait.four-omen-divination-copy',
+      'forbidden.result.clear-reading-layout',
       'love.ritual.reaction-images-separated',
       'finale.seal-test.behavior-choice',
-      'finale.seal-test.dedicated-reaction-art-still-needed',
+      'finale.seal-test.oracle-framing',
       'finale.choice.branch-copy-separated',
-      'finale.choice.remove-forced-withdrawal',
-      'finale.choice.scroll-only-portrait-mobile'
+      'finale.choice.remove-forced-withdrawal'
     ]
   };
 })();
