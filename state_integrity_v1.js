@@ -68,4 +68,11 @@
     }
     return nativeStringify(value, replacer, space);
   };
+
+  // 玩家確認「清除並重來」時，一併清掉尚未完成的生日暫存。
+  // 取消重置時不動任何資料，避免誤刪正在輸入的生日。
+  const confirmDialog = document.getElementById('confirmDialog');
+  confirmDialog?.addEventListener('close', () => {
+    if (confirmDialog.returnValue === 'confirm') sessionStorage.removeItem(REAL_BIRTH_KEY);
+  });
 })();
