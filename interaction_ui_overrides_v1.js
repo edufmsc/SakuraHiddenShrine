@@ -84,6 +84,28 @@
     if (hint && hint.textContent !== text) hint.textContent = text;
   };
 
+  const syncLastProofFallback = () => {
+    const existing = choices.querySelector('[data-v58-last-proof-fallback]');
+    const active = app.dataset.scene === 'love.last-proof';
+
+    if (!active) {
+      existing?.remove();
+      return;
+    }
+    if (existing) return;
+
+    const coreHotspot = hotspotLayer.querySelector('.scene-hotspot');
+    if (!coreHotspot) return;
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'choice-button choice-button--primary';
+    button.dataset.v58LastProofFallback = 'true';
+    button.innerHTML = '<strong>碰一下桌上的紅線</strong><small>不用猜圖上哪裡能點；這一步只確認你願不願意讓現實自己作答。</small>';
+    button.addEventListener('click', () => coreHotspot.click());
+    choices.append(button);
+  };
+
   const syncMobileReactionProtection = () => {
     const actualSrc = String(image.currentSrc || image.src || image.getAttribute('src') || '');
     const needsContain = mobileQuery.matches && [
@@ -124,6 +146,8 @@
           mobile: { x: .14, y: .65, w: .42, h: .24 }
         });
       }
+
+      syncLastProofFallback();
     });
   };
 
