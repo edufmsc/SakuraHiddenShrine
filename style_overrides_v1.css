@@ -1,5 +1,5 @@
 /* 櫻隱 V58｜Scene Lock V1
-   只處理已確認的命牒閱讀性、控制辨識與像素驗收後的局部版面問題，不重整原 style.css。 */
+   最終驗收修正版：命牒閱讀、四象選項、場景清晰度、手機可讀性。 */
 
 /* --------------------------------------------------------------------------
    命牒閱讀與互動
@@ -15,10 +15,14 @@
 .destiny-ink-line {
   overflow: visible !important;
   min-height: max-content;
+  margin: 0 !important;
+  padding-bottom: clamp(8px, 1vh, 12px) !important;
 }
 
 .destiny-ink-line p {
+  overflow: visible !important;
   overflow-wrap: anywhere;
+  margin-bottom: 0 !important;
 }
 
 .destiny-ink-line.is-final p {
@@ -38,17 +42,11 @@
   font-size: clamp(17px, 1.22vw, 20px) !important;
 }
 
-/* 正文、末筆提示、選項三區分開；不再用 flex 撐出無意義大空白。 */
 .destiny-ink {
   flex: 0 0 auto !important;
   min-height: auto !important;
   gap: clamp(8px, 1.1vh, 13px) !important;
   padding-bottom: 14px !important;
-}
-
-.destiny-ink-line {
-  margin: 0 !important;
-  padding-bottom: clamp(8px, 1vh, 12px) !important;
 }
 
 .destiny-prompt {
@@ -98,7 +96,6 @@
   background: linear-gradient(180deg, rgba(239,225,190,0), rgba(239,225,190,.95) 24%, rgba(239,225,190,.99));
 }
 
-/* 真結的最後一步一定由玩家自己按，不再隱藏、不再倒數自動觸發。 */
 .v58-final-accept-control {
   grid-column: 1 / -1;
   min-height: 52px;
@@ -126,29 +123,92 @@
   filter: grayscale(.22);
 }
 
-/* 桌機：短命牒依內容自然收高；內容真的太長才由紙張本身捲動。 */
+/* --------------------------------------------------------------------------
+   桌機：命牒不裁字、四象一律 2×2、故事 panel 不霧整張圖
+   -------------------------------------------------------------------------- */
 @media (min-width: 721px) {
-  .destiny-reader__paper-wrap { min-height: 0; }
+  .destiny-reader__paper-wrap {
+    min-height: 0;
+    align-items: flex-start !important;
+  }
 
   .destiny-paper,
   .destiny-reader--love .destiny-paper,
+  .destiny-reader--career .destiny-paper,
+  .destiny-reader--life .destiny-paper,
+  .destiny-reader--forbidden .destiny-paper,
   .destiny-reader--total .destiny-paper {
     min-height: 0 !important;
     height: auto !important;
-    max-height: calc(100dvh - 108px) !important;
+    max-height: calc(100dvh - 88px) !important;
+    padding-bottom: 24px !important;
+  }
+
+  .destiny-paper.scene-lock-v1-can-scroll .destiny-ink {
+    padding-bottom: 74px !important;
+  }
+
+  .destiny-paper:not(.scene-lock-v1-can-scroll) .destiny-ink {
     padding-bottom: 18px !important;
   }
 
-  .destiny-paper.scene-lock-v1-can-scroll .destiny-ink { padding-bottom: 68px !important; }
-  .destiny-paper:not(.scene-lock-v1-can-scroll) .destiny-ink { padding-bottom: 14px !important; }
-
-  .app[data-scene="forbidden.bait"] .choices {
+  /* 禁卷所有 4 選題都視為四象命盤，不受 choices--whisper 單欄覆蓋。 */
+  .app[data-scene="forbidden.pattern"] .choices,
+  .app[data-scene="forbidden.bait"] .choices,
+  .app[data-scene="forbidden.mask"] .choices,
+  .app[data-scene="forbidden.threat"] .choices,
+  .app[data-scene="forbidden.last-proof"] .choices {
+    display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 10px !important;
   }
-  .app[data-scene="forbidden.bait"] .choice-button {
-    min-height: 68px;
-    padding: 11px 13px;
+
+  .app[data-scene="forbidden.pattern"] .choice-button,
+  .app[data-scene="forbidden.bait"] .choice-button,
+  .app[data-scene="forbidden.mask"] .choice-button,
+  .app[data-scene="forbidden.threat"] .choice-button,
+  .app[data-scene="forbidden.last-proof"] .choice-button {
+    min-height: 78px !important;
+    padding: 12px 14px !important;
+    border-radius: 8px 18px 8px 18px !important;
+    background:
+      linear-gradient(135deg, rgba(var(--accent-rgb), .12), transparent 62%),
+      rgba(7, 4, 9, .82) !important;
+  }
+
+  .app[data-scene="forbidden.pattern"] .choice-button strong,
+  .app[data-scene="forbidden.bait"] .choice-button strong,
+  .app[data-scene="forbidden.mask"] .choice-button strong,
+  .app[data-scene="forbidden.threat"] .choice-button strong,
+  .app[data-scene="forbidden.last-proof"] .choice-button strong {
+    font-size: clamp(16px, 1.04vw, 19px) !important;
+  }
+
+  /* 禁卷與一般故事頁：不對整張背景加毛玻璃，只保留局部暗度。 */
+  .app[data-scene^="forbidden."] .scene-image,
+  .app[data-scene^="love."] .scene-image,
+  .app[data-scene^="career."] .scene-image,
+  .app[data-scene^="life."] .scene-image,
+  .app[data-scene^="finale."] .scene-image {
+    filter: saturate(1.04) contrast(1.035) !important;
+  }
+
+  .app[data-scene^="forbidden."] .story-panel,
+  .app[data-scene^="forbidden."] .panel-scroll {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .app[data-scene^="forbidden."] .story-panel::before,
+  .app[data-scene^="forbidden."] .panel-scroll::before,
+  .app[data-scene^="forbidden."] .panel-scroll::after {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    filter: none !important;
+  }
+
+  .app[data-scene^="forbidden."] .scene-shade {
+    opacity: .72 !important;
   }
 }
 
@@ -170,7 +230,9 @@
   border: 2px solid rgba(239, 219, 183, .72);
   border-radius: 999px;
 }
-.destiny-paper::-webkit-scrollbar-thumb:hover { background: rgba(122, 43, 36, .68); }
+.destiny-paper::-webkit-scrollbar-thumb:hover {
+  background: rgba(122, 43, 36, .68);
+}
 
 .destiny-paper.scene-lock-v1-can-scroll {
   box-shadow:
@@ -222,8 +284,14 @@
 }
 .v58-interaction-hotspot--seal { border-radius: 46% 54% 48% 52%; }
 .v58-interaction-hotspot--thread { border-radius: 48% 52% 44% 56%; }
-.app.v58-face-choice-mode .scene-hotspot { display: none !important; }
-.app.v58-face-choice-mode .scene-interaction-hint { opacity: .92; }
+
+/* love.face 正式採文字選項模式，舊圖上臉頰／唇前座標永久停用。 */
+.app.v58-face-choice-mode .scene-hotspot {
+  display: none !important;
+}
+.app.v58-face-choice-mode .scene-interaction-hint {
+  opacity: .92;
+}
 
 /* --------------------------------------------------------------------------
    手機
@@ -231,11 +299,13 @@
 @media (max-width: 720px) {
   .destiny-paper {
     -webkit-overflow-scrolling: touch;
-    padding: 22px 22px 24px !important;
+    padding: 22px 22px 28px !important;
   }
 
-  /* 手機最重要的是「不用放大畫面也能讀」。 */
-  .destiny-paper__head { gap: 10px !important; padding-bottom: 12px !important; }
+  .destiny-paper__head {
+    gap: 10px !important;
+    padding-bottom: 12px !important;
+  }
   .destiny-paper__head small {
     font-size: 12px !important;
     line-height: 1.35 !important;
@@ -250,10 +320,11 @@
     height: 38px !important;
     font-size: 18px !important;
   }
+
   .destiny-ink {
     gap: 8px !important;
     padding-top: 14px !important;
-    padding-bottom: 12px !important;
+    padding-bottom: 14px !important;
   }
   .destiny-ink-line small {
     margin-bottom: 4px !important;
@@ -266,19 +337,23 @@
   .destiny-paper.is-compact .destiny-ink-line p,
   .destiny-paper.is-tight .destiny-ink-line p {
     font-size: clamp(16px, 4.35vw, 18px) !important;
-    line-height: 1.58 !important;
+    line-height: 1.62 !important;
+    max-height: none !important;
+    -webkit-line-clamp: unset !important;
+    display: block !important;
   }
   .destiny-ink-line.is-final p,
   .destiny-paper.is-compact .destiny-ink-line.is-final p,
   .destiny-paper.is-tight .destiny-ink-line.is-final p {
     font-size: clamp(17px, 4.7vw, 19px) !important;
-    line-height: 1.58 !important;
+    line-height: 1.62 !important;
   }
   .destiny-prompt {
     font-size: 15px !important;
     line-height: 1.5 !important;
     margin-top: 8px !important;
   }
+
   .destiny-controls {
     position: static;
     grid-template-columns: 1fr !important;
@@ -305,9 +380,11 @@
 
   #reportBtn,
   #homeBtn,
-  #resetBtn { font-size: 14px; font-weight: 800; }
+  #resetBtn {
+    font-size: 14px;
+    font-weight: 800;
+  }
 
-  /* 手機展開功能後顯示完整名稱，而不是只靠單字猜功能。 */
   .toolbar-actions {
     width: min(286px, calc(100vw - 28px)) !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
@@ -346,7 +423,9 @@
     object-position: 50% 36% !important;
     transform: none !important;
   }
-  .app.v58-finale-landscape-reaction .scene-picture { background: #050306; }
+  .app.v58-finale-landscape-reaction .scene-picture {
+    background: #050306;
+  }
   .app.v58-finale-landscape-reaction .story-panel {
     height: min(32dvh, 286px) !important;
     max-height: min(32dvh, 286px) !important;
@@ -367,8 +446,8 @@
   }
 
   .app[data-scene="love.face"] .story-panel {
-    height: min(38dvh, 340px) !important;
-    max-height: min(38dvh, 340px) !important;
+    height: min(40dvh, 360px) !important;
+    max-height: min(40dvh, 360px) !important;
   }
 
   .app[data-scene="love.silence"] .panel-scroll,
