@@ -15,16 +15,30 @@ const report = { generatedAt: new Date().toISOString(), runs: [] };
 const browser = await chromium.launch({ headless: true });
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-async function waitForSceneImage(page) {
-  await page.waitForFunction(() => {
+async function settleSceneImage(page) {
+  const before = await page.locator('#sceneImage').getAttribute('src').catch(() => '');
+  await sleep(120);
+  await page.waitForFunction(previous => {
     const img = document.querySelector('#sceneImage');
     if (!img) return true;
-    return img.complete && img.naturalWidth > 0;
-  }, { timeout: 3500 }).catch(() => {});
+    const src = img.getAttribute('src') || '';
+    return src !== previous || img.complete;
+  }, before, { timeout: 4500 }).catch(() => {});
+
+  await page.locator('#sceneImage').evaluate(async img => {
+    if (!img) return;
+    try {
+      if (typeof img.decode === 'function') await Promise.race([
+        img.decode(),
+        new Promise(resolve => setTimeout(resolve, 1800))
+      ]);
+    } catch {}
+  }).catch(() => {});
+  await sleep(50);
 }
 
 async function snapshot(page) {
-  await waitForSceneImage(page);
+  await settleSceneImage(page);
   return page.evaluate(() => {
     const app = document.querySelector('#app');
     const img = document.querySelector('#sceneImage');
@@ -35,12 +49,13 @@ async function snapshot(page) {
       layout: app?.dataset.layout || '',
       title: document.querySelector('#sceneTitle')?.textContent?.trim() || '',
       image: img?.currentSrc || img?.src || '',
+      imageAttr: img?.getAttribute('src') || '',
+      imageComplete: Boolean(img?.complete),
       imageNatural: [img?.naturalWidth || 0, img?.naturalHeight || 0],
       overflowX: document.documentElement.scrollWidth > innerWidth + 2,
       readerVisible: visible(document.querySelector('#destinyReader')),
       doorVisible: visible(document.querySelector('#doorStage')),
-      missingImages: [...document.images].filter(i => i.complete && !i.naturalWidth).map(i => i.src),
-      bodyText: document.body.innerText.slice(0, 1600)
+      bodyText: document.body.innerText.slice(0, 1800)
     };
   });
 }
@@ -53,7 +68,7 @@ async function clickFirst(page, selectors) {
       const item = items.nth(i);
       if (await item.isVisible().catch(() => false) && await item.isEnabled().catch(() => false)) {
         await item.click({ timeout: 2500 }).catch(() => {});
-        await sleep(120);
+        await sleep(130);
         return true;
       }
     }
@@ -61,13 +76,13 @@ async function clickFirst(page, selectors) {
   return false;
 }
 
-async function fillVisibleForm(page, log) {
+async function fillVisibleForm(page, log, flags) {
   const alias = page.locator('input[name="alias"]:visible');
   if (await alias.count()) {
     await alias.fill('測試者');
     await alias.locator('xpath=ancestor::form').evaluate(form => form.requestSubmit());
     log.push('filled alias');
-    await sleep(120);
+    await sleep(130);
     return true;
   }
 
@@ -78,7 +93,8 @@ async function fillVisibleForm(page, log) {
     await birth.fill(value);
     await birth.locator('xpath=ancestor::form').evaluate(form => form.requestSubmit());
     log.push(`filled birth ${active}=${value}`);
-    await sleep(120);
+    if (active === 'day') flags.birthDaySubmitted = true;
+    await sleep(140);
     return true;
   }
   return false;
@@ -95,7 +111,7 @@ async function chooseDoor(page, log) {
       if (await btn.isVisible().catch(() => false)) {
         await btn.click();
         log.push(`door ${id}`);
-        await sleep(140);
+        await sleep(150);
         return true;
       }
     }
@@ -105,14 +121,19 @@ async function chooseDoor(page, log) {
   if (await finalDoor.isVisible().catch(() => false) && await finalDoor.isEnabled().catch(() => false)) {
     await finalDoor.click();
     log.push('final door');
-    await sleep(140);
+    await sleep(150);
     return true;
   }
   return false;
 }
 
-async function progressOne(page, log) {
-  if (await fillVisibleForm(page, log)) return true;
+async function progressOne(page, log, flags) {
+  if (await fillVisibleForm(page, log, flags)) return true;
+
+  const birthComplete = page.locator('.birth-ritual--complete');
+  if (await birthComplete.count() && await birthComplete.isVisible().catch(() => false)) {
+    flags.birthCompleteSeen = true;
+  }
 
   const appMode = await page.locator('#app').getAttribute('data-mode').catch(() => '');
   if (appMode === 'hub' || await page.locator('#doorStage').isVisible().catch(() => false)) {
@@ -122,7 +143,7 @@ async function progressOne(page, log) {
   if (await page.locator('#destinyReader').isVisible().catch(() => false)) {
     const paper = page.locator('#destinyPaper');
     if (await paper.count()) await paper.evaluate(el => { el.scrollTop = el.scrollHeight; });
-    await sleep(80);
+    await sleep(100);
     if (await clickFirst(page, ['#destinyControls button:not([disabled])'])) {
       log.push('destiny control');
       return true;
@@ -149,9 +170,14 @@ async function runDevice(device) {
   const page = await context.newPage();
   const consoleErrors = [];
   const requestFailures = [];
+  const badResponses = [];
+
   page.on('console', msg => { if (msg.type() === 'error') consoleErrors.push(msg.text()); });
   page.on('pageerror', err => consoleErrors.push(String(err)));
   page.on('requestfailed', req => requestFailures.push(`${req.method()} ${req.url()} :: ${req.failure()?.errorText || 'failed'}`));
+  page.on('response', response => {
+    if (response.status() >= 400) badResponses.push(`${response.status()} ${response.url()}`);
+  });
 
   await page.goto('http://127.0.0.1:4173/index.html', { waitUntil: 'networkidle' });
   await page.evaluate(() => { localStorage.clear(); sessionStorage.clear(); });
@@ -160,20 +186,55 @@ async function runDevice(device) {
   const log = [];
   const states = [];
   const seenScenes = new Set();
+  const flags = {
+    birthDaySubmitted: false,
+    birthCompleteSeen: false,
+    birthAdvancedWithoutCover: false,
+    birthReturnedToCover: false
+  };
   let stalled = false;
-  let imageFailure = false;
+  let brokenImage = false;
+  let horizontalOverflow = false;
+  let previousScene = '';
 
-  for (let step = 0; step < 620; step += 1) {
+  for (let step = 0; step < 700; step += 1) {
     const s = await snapshot(page);
-    states.push({ step, mode:s.mode, scene:s.scene, title:s.title, image:s.image.split('/').pop(), overflowX:s.overflowX });
+    states.push({
+      step,
+      mode:s.mode,
+      scene:s.scene,
+      title:s.title,
+      image:s.image.split('/').pop(),
+      imageComplete:s.imageComplete,
+      imageNatural:s.imageNatural,
+      overflowX:s.overflowX
+    });
     if (s.scene) seenScenes.add(s.scene);
 
-    if (s.imageNatural[0] === 0 || s.missingImages.length) {
-      imageFailure = true;
-      log.push(`image failure at ${s.scene || s.mode}: ${s.missingImages.join(', ') || s.image}`);
+    if (s.overflowX) {
+      horizontalOverflow = true;
+      log.push(`horizontal overflow at ${s.scene || s.mode}`);
+    }
+
+    const matchingBadImage = badResponses.find(entry => {
+      const name = (s.imageAttr || s.image).split('/').pop();
+      return name && entry.includes(name);
+    });
+    if (matchingBadImage || (s.imageComplete && s.imageNatural[0] === 0 && matchingBadImage)) {
+      brokenImage = true;
+      log.push(`broken image at ${s.scene || s.mode}: ${matchingBadImage || s.image}`);
       break;
     }
-    if (s.overflowX) log.push(`horizontal overflow at ${s.scene || s.mode}`);
+
+    if (flags.birthDaySubmitted && s.mode === 'cover') {
+      flags.birthReturnedToCover = true;
+      log.push('BIRTH BUG: returned to cover after birthday submission');
+      break;
+    }
+    if (flags.birthCompleteSeen && s.mode !== 'cover' && s.scene !== previousScene) {
+      flags.birthAdvancedWithoutCover = true;
+    }
+    previousScene = s.scene;
 
     const saved = await page.evaluate(() => {
       try { return JSON.parse(localStorage.getItem('sakura-hidden-shrine-v58') || '{}'); } catch { return {}; }
@@ -183,7 +244,7 @@ async function runDevice(device) {
       break;
     }
 
-    const progressed = await progressOne(page, log);
+    const progressed = await progressOne(page, log, flags);
     if (!progressed) {
       const fallback = await clickFirst(page, [
         '.story-panel button:not([hidden]):not([disabled])',
@@ -196,7 +257,7 @@ async function runDevice(device) {
         break;
       }
     }
-    await sleep(100);
+    await sleep(110);
   }
 
   const finalState = await page.evaluate(() => {
@@ -211,7 +272,9 @@ async function runDevice(device) {
     device: device.name,
     viewport: [device.width, device.height],
     stalled,
-    imageFailure,
+    brokenImage,
+    horizontalOverflow,
+    birth: flags,
     completedRoutes,
     finaleCompleted: Boolean(finalState.finale?.completed),
     finalDawnSeen: Boolean(finalState.flags?.finalDawnSeen),
@@ -219,6 +282,7 @@ async function runDevice(device) {
     seenScenes: [...seenScenes],
     consoleErrors,
     requestFailures,
+    badResponses,
     log
   };
 
@@ -238,14 +302,19 @@ const md = ['# Main Full Browser QA', ''];
 for (const run of report.runs) {
   md.push(`## ${run.device}`);
   md.push(`- Stalled: ${run.stalled}`);
-  md.push(`- Image failure: ${run.imageFailure}`);
+  md.push(`- Broken image: ${run.brokenImage}`);
+  md.push(`- Horizontal overflow observed: ${run.horizontalOverflow}`);
+  md.push(`- Birth day submitted: ${run.birth.birthDaySubmitted}`);
+  md.push(`- Birth complete seen: ${run.birth.birthCompleteSeen}`);
+  md.push(`- Birth returned to cover: ${run.birth.birthReturnedToCover}`);
   md.push(`- Completed routes: ${run.completedRoutes.join(', ') || 'none'}`);
   md.push(`- Finale completed: ${run.finaleCompleted}`);
   md.push(`- Dawn seen: ${run.finalDawnSeen}`);
   md.push(`- Scenes reached: ${run.seenSceneCount}`);
   md.push(`- Console errors: ${run.consoleErrors.length}`);
   md.push(`- Failed requests: ${run.requestFailures.length}`);
-  md.push(`- Last log: ${run.log.slice(-10).join(' | ')}`);
+  md.push(`- Bad HTTP responses: ${run.badResponses.length}`);
+  md.push(`- Last log: ${run.log.slice(-12).join(' | ')}`);
   md.push('');
 }
 fs.writeFileSync('qa-artifacts/report.md', md.join('\n'));
@@ -253,12 +322,15 @@ fs.writeFileSync('qa-artifacts/report.md', md.join('\n'));
 const failures = [];
 for (const run of report.runs) {
   if (run.stalled) failures.push(`${run.device}: flow stalled`);
-  if (run.imageFailure) failures.push(`${run.device}: image failed`);
+  if (run.brokenImage) failures.push(`${run.device}: broken image`);
+  if (run.birth.birthReturnedToCover) failures.push(`${run.device}: birthday returned to cover`);
+  if (!run.birth.birthDaySubmitted) failures.push(`${run.device}: birthday day was never submitted`);
   if (run.completedRoutes.length !== 4) failures.push(`${run.device}: only ${run.completedRoutes.length}/4 routes completed`);
   if (!run.finaleCompleted) failures.push(`${run.device}: finale not completed`);
   if (!run.finalDawnSeen) failures.push(`${run.device}: dawn not reached`);
   failures.push(...run.consoleErrors.map(e => `${run.device}: console ${e}`));
   failures.push(...run.requestFailures.filter(x => !x.includes('.ogg')).map(e => `${run.device}: request ${e}`));
+  failures.push(...run.badResponses.filter(x => !x.includes('.ogg') && !x.includes('favicon')).map(e => `${run.device}: HTTP ${e}`));
 }
 if (failures.length) {
   console.error(failures.join('\n'));
