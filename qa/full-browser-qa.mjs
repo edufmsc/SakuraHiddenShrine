@@ -181,7 +181,7 @@ async function progressDestinyReader(page, log) {
   return false;
 }
 
-async function progressOne(page, log, flags, choiceOffset) {
+async function progressOne(page, log, flags, choiceOffset, choiceHistory) {
   if (await fillVisibleForm(page, log, flags)) return true;
 
   const birthComplete = page.locator('.birth-ritual--complete');
@@ -202,9 +202,15 @@ async function progressOne(page, log, flags, choiceOffset) {
     return true;
   }
 
-  // Intake/cover must always take the progressing path. Story/finale uses matrix offset.
+  // 每個故事場景第一次依矩陣測第 N 個選項；若副功能（例如重看命牒）回到同一幕，
+  // 第二次改走第 1 個主線選項，避免 QA 自己製造無限回顧循環。
   if (appMode === 'route' || appMode === 'finale') {
-    if (await clickChoiceByOffset(page, choiceOffset, log)) return true;
+    const key = `${appMode}:${scene}`;
+    const effectiveOffset = choiceHistory.has(key) ? 0 : choiceOffset;
+    if (await clickChoiceByOffset(page, effectiveOffset, log)) {
+      choiceHistory.add(key);
+      return true;
+    }
   } else if (await clickFirst(page, ['#choices .choice-button--primary', '#choices .choice-button', '#choices button'])) {
     log.push(`intake choice at ${scene}`);
     return true;
@@ -237,12 +243,13 @@ async function runScenario(device, choiceOffset) {
   const log = [];
   const states = [];
   const seenScenes = new Set();
+  const choiceHistory = new Set();
   const flags = { birthDaySubmitted:false, birthCompleteSeen:false, birthReturnedToCover:false };
   let stalled = false;
   let brokenImage = false;
   let horizontalOverflow = false;
 
-  for (let step = 0; step < 760; step += 1) {
+  for (let step = 0; step < 320; step += 1) {
     const s = await snapshot(page);
     states.push({ step, mode:s.mode, scene:s.scene, title:s.title, image:s.image.split('/').pop(), imageComplete:s.imageComplete, imageNatural:s.imageNatural, overflowX:s.overflowX });
     if (s.scene) seenScenes.add(s.scene);
@@ -272,7 +279,7 @@ async function runScenario(device, choiceOffset) {
       break;
     }
 
-    const progressed = await progressOne(page, log, flags, choiceOffset);
+    const progressed = await progressOne(page, log, flags, choiceOffset, choiceHistory);
     if (!progressed) {
       const fallback = await clickFirst(page, [
         '.story-panel button:not([hidden]):not([disabled])',
