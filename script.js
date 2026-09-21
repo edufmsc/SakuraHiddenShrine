@@ -75,7 +75,7 @@
       mode: 'cover',
       intakeScene: 0,
       route: null,
-      profile: { alias: '', fortuneSeed: 0, period: 'month', omen: null },
+      profile: { alias: '', birth: null, fortuneSeed: 0, period: 'month', omen: null },
       completedOrder: [],
       flags: {},
       sound: true,
@@ -1071,7 +1071,7 @@
     }
 
     const stage = currentStage;
-    const limits = { year: [nowYear - 90, nowYear - 18], month: [1, 12], day: [1, 31] };
+    const limits = { year: [1, nowYear - 18], month: [1, 12], day: [1, 31] };
     const [min, max] = limits[stage];
     const form = document.createElement('form');
     form.className = 'birth-ritual';
@@ -1111,6 +1111,7 @@
         birthDraft = { stage: 'year', year: null, month: null, day: null, echo: null, finished: false };
         return;
       }
+      state.profile.birth = { year: y, month: m, day: d };
       state.profile.fortuneSeed = hash(`${state.profile.alias}|${y}-${m}-${d}`);
       birthDraft.finished = true;
       renderIntake();
