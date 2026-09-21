@@ -25,8 +25,13 @@ permissions:
 
 jobs:
   browser-qa:
+    strategy:
+      fail-fast: false
+      matrix:
+        device: [desktop, mobile]
+        choice: [0, 1, 2, 3]
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
         with:
@@ -43,14 +48,17 @@ jobs:
           npm install --silent playwright@1.55.0
           npx playwright install --with-deps chromium
 
-      - name: Run full Desktop and Mobile QA
+      - name: Run ${{ matrix.device }} choice ${{ matrix.choice }} QA
+        env:
+          QA_DEVICE: ${{ matrix.device }}
+          QA_CHOICE_OFFSET: ${{ matrix.choice }}
         run: node qa/full-browser-qa.mjs
 
       - name: Upload QA evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: main-full-browser-qa
+          name: main-full-browser-qa-${{ matrix.device }}-choice${{ matrix.choice }}
           path: qa-artifacts
           if-no-files-found: error
           retention-days: 14
