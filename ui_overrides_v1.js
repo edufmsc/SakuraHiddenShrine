@@ -77,21 +77,32 @@
   sessionStorage.removeItem('sakura-v58-real-birth-date');
 
   // ---------------------------------------------------------------------------
-  // 真結流程：玩家完整讀完總命牒後，才解鎖一次具有戲劇意義的終幕操作。
+  // 真結流程：總命牒讀到最後一行後自動進入黎明。
+  // 不再要求玩家額外按一次；等待期間也不讓「重看第五卷」搶先形成循環。
   // ---------------------------------------------------------------------------
   if (controls && paper) {
     const finalLabel = '收下命牒・看見黎明';
+    let dawnTimer = 0;
+    let scheduledButton = null;
 
     const findFinalButton = () => [...controls.querySelectorAll('button')].find(button =>
       button.textContent.trim() === '走向黎明' ||
       button.textContent.trim() === '走向黎明・櫻隱終幕' ||
+      button.textContent.trim() === finalLabel ||
       button.classList.contains('v58-final-accept-control')
     ) || null;
+
+    const cancelDawn = () => {
+      clearTimeout(dawnTimer);
+      dawnTimer = 0;
+      scheduledButton = null;
+    };
 
     updateFinalGate = () => {
       const dawn = findFinalButton();
       if (!dawn) {
-        controls.classList.remove('v58-final-reading-gate');
+        cancelDawn();
+        controls.classList.remove('v58-final-reading-gate', 'v58-auto-ending');
         return;
       }
 
@@ -99,19 +110,50 @@
       dawn.classList.add('v58-final-accept-control');
       if (dawn.textContent.trim() !== finalLabel) dawn.textContent = finalLabel;
 
+      const otherButtons = [...controls.querySelectorAll('button')].filter(button => button !== dawn);
+      otherButtons.forEach(button => {
+        button.disabled = true;
+        button.setAttribute('aria-disabled', 'true');
+      });
+
       const scrollable = paper.scrollHeight > paper.clientHeight + 4;
       const readToEnd = !scrollable || (paper.scrollHeight - paper.clientHeight - paper.scrollTop) <= 42;
-      dawn.disabled = !readToEnd;
-      dawn.setAttribute('aria-disabled', String(!readToEnd));
-      dawn.setAttribute('aria-label', readToEnd ? '收下命牒並進入櫻隱終幕' : '請先讀到命牒最後一行');
+
+      if (!readToEnd) {
+        cancelDawn();
+        controls.classList.remove('v58-auto-ending');
+        dawn.disabled = true;
+        dawn.setAttribute('aria-disabled', 'true');
+        dawn.setAttribute('aria-label', '請先讀到命牒最後一行');
+        if (prompt) {
+          prompt.hidden = false;
+          const copy = '先把這一卷看完。滑到最後一行後，門外的天光才會亮起。';
+          if (prompt.textContent !== copy) prompt.textContent = copy;
+        }
+        return;
+      }
+
+      dawn.disabled = false;
+      dawn.setAttribute('aria-disabled', 'false');
+      dawn.setAttribute('aria-label', '命牒讀完後自動進入櫻隱終幕');
+      controls.classList.add('v58-auto-ending');
 
       if (prompt) {
         prompt.hidden = false;
-        const copy = readToEnd
-          ? '最後一行已經讀完。這一夜只剩你自己願不願意把它收下。'
-          : '先把這一卷看完。滑到最後一行後，門外的天光才會亮起。';
+        const copy = '最後一行已經讀完。墨正在乾，門外的天光正慢慢亮起……';
         if (prompt.textContent !== copy) prompt.textContent = copy;
       }
+
+      if (scheduledButton === dawn) return;
+      cancelDawn();
+      scheduledButton = dawn;
+      dawnTimer = setTimeout(() => {
+        const target = scheduledButton;
+        scheduledButton = null;
+        dawnTimer = 0;
+        if (!target || !target.isConnected || target.disabled) return;
+        target.click();
+      }, 1800);
     };
 
     const controlObserver = new MutationObserver(() => requestAnimationFrame(updateFinalGate));
