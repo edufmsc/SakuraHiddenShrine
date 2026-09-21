@@ -5,11 +5,16 @@ import { spawn } from 'node:child_process';
 const server = spawn('python3', ['-m', 'http.server', '4173', '--bind', '127.0.0.1'], { stdio: 'ignore' });
 await new Promise(resolve => setTimeout(resolve, 1200));
 
-const devices = [
+const allDevices = [
   { name: 'desktop', width: 1440, height: 900 },
   { name: 'mobile', width: 390, height: 844 }
 ];
-const choiceOffsets = [0, 1, 2, 3];
+const requestedDevice = String(process.env.QA_DEVICE || '').trim();
+const devices = requestedDevice ? allDevices.filter(item => item.name === requestedDevice) : allDevices;
+const requestedChoice = Number.parseInt(process.env.QA_CHOICE_OFFSET || '', 10);
+const choiceOffsets = Number.isInteger(requestedChoice) && requestedChoice >= 0 && requestedChoice <= 3
+  ? [requestedChoice]
+  : [0, 1, 2, 3];
 
 fs.mkdirSync('qa-artifacts', { recursive: true });
 const report = { generatedAt: new Date().toISOString(), runs: [] };
